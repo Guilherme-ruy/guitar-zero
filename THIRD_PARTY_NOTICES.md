@@ -32,6 +32,17 @@ de oitava, reset de nova nota, histereses e hold seguem ideias e valores
 iniciais do fgnass/tuner (janela de estabilidade, 20 cents, minCutoff 0.6,
 beta 0.06, 250 cents, 30 cents, 3/6 cents, 700 ms), sem cópia de código.
 
+A análise espectral (`lib/core/dsp/spectral/`,
+`lib/core/dsp/harmonic_pitch_detector.dart`) também é própria: FFT radix-2
+(Cooley–Tukey) escrita do zero; interpolação de pico pelo estimador de
+Grandke (1983) para janela Hann; correção de oitava com regra própria
+(pico obrigatório em f/2 + energia dos harmônicos ímpares de f/2, e
+correção para cima por ausência de harmônicos ímpares); harmonicidade
+própria (energia explicada × completude). Do fgnass/tuner vieram as ideias
+de verificar sub-harmônicos no espectro, medir proeminência contra a
+mediana da vizinhança (fator 12) e refinar a fundamental pela média
+ponderada de `f_h / h` — sem cópia de código. Nenhuma dependência nova.
+
 | Projeto | Licença | Uso |
 | --- | --- | --- |
 | [PitchKit](https://github.com/NicosNicolaou16/PitchKit) @ `26a7909` — Nicos Nicolaou | Apache 2.0 | Referência: YIN, high-pass/DC removal, energy gate, smoothing temporal |
@@ -43,6 +54,8 @@ Artigos de referência:
   speech and music*. JASA, 2002. https://doi.org/10.1121/1.1458024
 - G. Casiez, N. Roussel, D. Vogel. *1€ Filter*. CHI 2012.
   https://gery.casiez.net/1euro/
+- D. Grandke. *Interpolation Algorithms for Discrete Fourier Transforms of
+  Weighted Signals*. IEEE Trans. Instrum. Meas. 32(2), 1983.
 
 ## Dependências de pacotes
 

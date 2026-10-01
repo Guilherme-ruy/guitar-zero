@@ -10,7 +10,9 @@ TunerController (ChangeNotifier)  lib/features/tuner/tuner_controller.dart
 TunerEngine (interface)           lib/core/tuner/tuner_engine.dart
    ↓ implementação PitchTunerEngine compõe:
 AudioInput (interface)            lib/core/audio/          captura PCM + timestamp
-PitchDetector (YinPitchDetector)  lib/core/dsp/            frequência fundamental
+PitchDetector                     lib/core/dsp/
+  HarmonicPitchDetector             YIN (semente) + HarmonicAnalyzer (FFT,
+                                    oitava, refinamento, harmonicidade)
 TunerPipeline                     lib/core/tuner/          síncrono, sem áudio:
   PitchFilter (cadeia)            lib/core/dsp/filters/    gates, oitava, estabilidade, One Euro
   StringTracker                   lib/core/music/          corda com histerese
@@ -36,8 +38,10 @@ Regra de dependência: `core/` não importa Flutter (exceto `dart:` e
 
 1. `AudioInput.frames` entrega blocos PCM mono `Float32List` em [-1, 1], com
    timestamp monotônico.
-2. `PitchDetector.detect` estima `PitchEstimate(frequencyHz, confidence, rms)`
-   ou `null`.
+2. `PitchDetector.detect` estima
+   `PitchEstimate(frequencyHz, periodicity, harmonicity, rms)` ou `null`.
+   No `HarmonicPitchDetector`, o YIN dá a semente e o `HarmonicAnalyzer`
+   (espectro do mesmo frame, sem estado) corrige a oitava e refina.
 3. `TunerPipeline` aplica a cadeia de `PitchFilter` (gate de confiança, faixa,
    proteção temporal de oitava, stability gate, One Euro), a histerese de
    corda, a histerese de afinado e o hold de silêncio. Usa timestamps.

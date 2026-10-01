@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guitar_zero/core/audio/audio_frame.dart';
 import 'package:guitar_zero/core/audio/audio_input.dart';
+import 'package:guitar_zero/core/dsp/harmonic_pitch_detector.dart';
+import 'package:guitar_zero/core/dsp/pitch_detector.dart';
 import 'package:guitar_zero/core/dsp/pitch_estimate.dart';
 import 'package:guitar_zero/core/dsp/pitch_filter.dart';
 import 'package:guitar_zero/core/dsp/yin_pitch_detector.dart';
@@ -40,8 +42,8 @@ void main() {
     final engine = PitchTunerEngine(
       audioInput: input,
       detector: ScriptedPitchDetector([
-        PitchEstimate(frequencyHz: frequencyFromMidi(45.02), confidence: 0.9),
-        PitchEstimate(frequencyHz: frequencyFromMidi(45.2), confidence: 0.9),
+        PitchEstimate(frequencyHz: frequencyFromMidi(45.02), periodicity: 0.9),
+        PitchEstimate(frequencyHz: frequencyFromMidi(45.2), periodicity: 0.9),
         null,
       ]),
       pitchFilter: const PitchFilterChain([]),
@@ -72,7 +74,7 @@ void main() {
   test('aplica o filtro de pitch injetado e o reinicia ao começar', () async {
     final filter = _DoublingFilter();
     final detector = ScriptedPitchDetector([
-      const PitchEstimate(frequencyHz: 55, confidence: 1),
+      const PitchEstimate(frequencyHz: 55, periodicity: 1),
     ]);
     final engine = PitchTunerEngine(
       audioInput: input,
@@ -157,5 +159,59 @@ void main() {
     expect(held.length, 17); // 400..1040 ms: ≤ 700 ms após 360 ms
     expect(afterTone.skip(held.length), everyElement(isNull));
     await engine.dispose();
+  });
+
+  group('oitava errada desde a primeira detecção (sem histórico)', () {
+    // E2 com H2 dominante e H1/H3 fracos: o YIN isolado erra a oitava já no
+    // primeiro frame, e a proteção temporal não tem referência.
+    Future<List<TunerReading?>> runE2(PitchDetector detector) async {
+      final engine = PitchTunerEngine(audioInput: input, detector: detector);
+      final readings = <TunerReading?>[];
+      engine.readings.listen(readings.add);
+      await engine.start();
+      const sampleRate = 48000;
+      const hop = 1920;
+      final signal = SyntheticSignals.tone(
+        frequencyHz: 82.41,
+        sampleRate: sampleRate,
+        length: 4096 + hop * 9,
+        harmonics: const [0.1, 1, 0.1, 0.3],
+      );
+      for (var i = 0; i < 10; i++) {
+        input.emit(
+          SyntheticSignals.frame(
+            signal,
+            sampleRate,
+            offset: i * hop,
+            length: 4096,
+          ),
+        );
+      }
+      await pumpEventQueue();
+      await engine.dispose();
+      return readings;
+    }
+
+    test(
+      'YIN isolado: a tela mostra a nota uma oitava acima (E3 → D3/G3)',
+      () async {
+        final readings = await runE2(YinPitchDetector());
+        expect(readings.last!.frequency, closeTo(164.8, 0.5));
+        expect(readings.last!.string.note.toString(), isNot('E2'));
+      },
+    );
+
+    test(
+      'CORRIGIDO com HarmonicPitchDetector: E2 desde a primeira leitura',
+      () async {
+        final readings = await runE2(HarmonicPitchDetector());
+        final shown = readings.whereType<TunerReading>().toList();
+        expect(shown, isNotEmpty);
+        for (final r in shown) {
+          expect(r.string.note.toString(), 'E2');
+          expect(r.cents.abs(), lessThan(1));
+        }
+      },
+    );
   });
 }

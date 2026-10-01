@@ -59,7 +59,7 @@ void expectAccurate(
     lessThanOrEqualTo(toleranceCents),
     reason: 'erro de ${error.toStringAsFixed(4)} cents em $expectedHz Hz',
   );
-  expect(estimate.confidence, greaterThanOrEqualTo(minConfidence));
+  expect(estimate.periodicity, greaterThanOrEqualTo(minConfidence));
 }
 
 void main() {
@@ -138,7 +138,7 @@ void main() {
         );
         expectAccurate(e, a2);
         expect(e!.frequencyHz, closeTo(reference!.frequencyHz, 1e-4));
-        expect(e.confidence, closeTo(reference.confidence, 1e-4));
+        expect(e.periodicity, closeTo(reference.periodicity, 1e-4));
       }
     });
 
@@ -183,7 +183,7 @@ void main() {
               );
               if (e != null) {
                 expect(
-                  e.confidence,
+                  e.periodicity,
                   lessThan(minConfidence),
                   reason: 'semente $seed, pico $peak: $e',
                 );
@@ -239,7 +239,7 @@ void main() {
               48000,
             ),
           );
-          if (e == null || e.confidence < minConfidence) continue;
+          if (e == null || e.periodicity < minConfidence) continue;
           expect(
             centsBetween(e.frequencyHz, f).abs(),
             lessThan(50),
@@ -274,7 +274,7 @@ void main() {
             if (offset == 0) {
               // Frame que contém o ataque: pode errar alguns cents, mas
               // nunca dar uma nota errada com confiança alta.
-              if (e != null && e.confidence >= minConfidence) {
+              if (e != null && e.periodicity >= minConfidence) {
                 expect(error.abs(), lessThanOrEqualTo(5), reason: '$e');
               }
             } else {
@@ -292,7 +292,7 @@ void main() {
       for (final f in [40.0, 50.0, 55.0]) {
         final e = detectTone(f, 48000, 4096, harmonics: const [1, 0.5, 0.3]);
         expect(
-          e == null || e.confidence < minConfidence,
+          e == null || e.periodicity < minConfidence,
           isTrue,
           reason: '$f Hz → $e',
         );
@@ -325,7 +325,7 @@ void main() {
         48000,
       );
       final e = narrow.detect(e2);
-      expect(e == null || e.confidence < minConfidence, isTrue);
+      expect(e == null || e.periodicity < minConfidence, isTrue);
     });
   });
 
@@ -376,7 +376,7 @@ void main() {
       );
       final again = fresh.detect(target);
       expect(again!.frequencyHz, first!.frequencyHz);
-      expect(again.confidence, first.confidence);
+      expect(again.periodicity, first.periodicity);
     });
   });
 }

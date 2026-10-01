@@ -60,7 +60,7 @@ void main() {
             continue;
           }
           maxErr = math.max(maxErr, centsBetween(e.frequencyHz, f).abs());
-          minConf = math.min(minConf, e.confidence);
+          minConf = math.min(minConf, e.periodicity);
         }
       }
       stdout.writeln(
@@ -99,7 +99,7 @@ void main() {
           final tag = oct == 0 ? '' : ' OITAVA${oct > 0 ? '+' : ''}$oct';
           cells.add(
             '${s.note}: ${fmt(c - oct * 1200, 2)}c '
-            'conf ${fmt(e.confidence, 2)}$tag',
+            'conf ${fmt(e.periodicity, 2)}$tag',
           );
         }
         stdout.writeln('     $sr/$size  ${cells.join(' | ')}');
@@ -144,7 +144,7 @@ void main() {
       );
       stdout.writeln(
         '   dc $dc amp $amp: '
-        '${e == null ? 'sem estimativa' : '${fmt(centsBetween(e.frequencyHz, a2), 4)}c conf ${fmt(e.confidence)} rms ${fmt(e.rms!, 4)}'}',
+        '${e == null ? 'sem estimativa' : '${fmt(centsBetween(e.frequencyHz, a2), 4)}c conf ${fmt(e.periodicity)} rms ${fmt(e.rms!, 4)}'}',
       );
     }
   }
@@ -166,8 +166,8 @@ void main() {
           if (e == null) {
             nulls++;
           } else {
-            maxConf = math.max(maxConf, e.confidence);
-            if (e.confidence >= 0.9) confident++;
+            maxConf = math.max(maxConf, e.periodicity);
+            if (e.periodicity >= 0.9) confident++;
           }
         }
         stdout.writeln(
@@ -198,7 +198,7 @@ void main() {
       );
       if (e == null) continue;
       maxErr = math.max(maxErr, centsBetween(e.frequencyHz, f).abs());
-      minConf = math.min(minConf, e.confidence);
+      minConf = math.min(minConf, e.periodicity);
     }
     stdout.writeln(
       '   ruído pico $peak: erro máx ${fmt(maxErr)} cents, conf mín ${fmt(minConf)}',
@@ -243,7 +243,7 @@ void main() {
         cells.add(
           e == null
               ? '—'
-              : '${fmt(centsBetween(e.frequencyHz, f), 1)}/${fmt(e.confidence, 2)}',
+              : '${fmt(centsBetween(e.frequencyHz, f), 1)}/${fmt(e.periodicity, 2)}',
         );
       }
       stdout.writeln('   ${s.note} $sr/$size (cents/conf): ${cells.join(' ')}');
@@ -254,7 +254,7 @@ void main() {
   for (final f in [40.0, 55.0, 470.0, 500.0, 660.0, 900.0]) {
     final e = run(f, 48000, 4096, harmonics: [1, .5, .3]);
     stdout.writeln(
-      '   $f Hz: ${e == null ? 'sem estimativa' : '${fmt(e.frequencyHz, 2)} Hz conf ${fmt(e.confidence)}'}',
+      '   $f Hz: ${e == null ? 'sem estimativa' : '${fmt(e.frequencyHz, 2)} Hz conf ${fmt(e.periodicity)}'}',
     );
   }
 }

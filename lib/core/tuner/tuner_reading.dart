@@ -17,7 +17,7 @@ class TunerReading {
   /// Frequência fundamental (já filtrada), em Hz.
   final double frequency;
 
-  /// Confiança da detecção, de 0 a 1.
+  /// Periodicidade da detecção (confiança do YIN), de 0 a 1.
   final double confidence;
 
   /// Corda ativa na afinação (com histerese).

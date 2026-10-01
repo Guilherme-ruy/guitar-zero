@@ -1,9 +1,8 @@
 # Estratégia de DSP
 
-> Status: **aprovada com ajustes**. Fase 1 (YIN) e fase 2 (filtros temporais)
-> implementadas e validadas com sinais sintéticos — ver [Fases](#fases),
-> [Resultados da fase 1](#resultados-da-fase-1--yin) e
-> [Resultados da fase 2](#resultados-da-fase-2--pipeline-temporal).
+> Status: **aprovada com ajustes**. Fases 1 (YIN), 2 (filtros temporais) e 3
+> (análise espectral) implementadas e validadas com sinais sintéticos — ver
+> [Fases](#fases) e as seções de resultados de cada fase.
 
 ## Objetivo
 
@@ -77,7 +76,9 @@ Cada etapa é um `PitchDetector` ou `PitchFilter` independente e testável.
    → interpolação parabólica → `f = sr/τ`, `confidence = 1 − d'(τ)`.
 4. **Restrição de faixa** (detector): lag limitado a `[sr/fmax, sr/fmin]`;
    mínimo encostado na borda da faixa não é aceito.
-5. **Gate de confiança** (`ConfidenceGate`): `confidence < minConfidence` → sem pitch.
+4b. **Análise espectral** (`HarmonicAnalyzer`, fase 3): correção de oitava
+   (para baixo e para cima), refinamento harmônico e harmonicidade.
+5. **Gate de confiança** (`ConfidenceGate`): `periodicity < minConfidence` → sem pitch.
 6. **Gate de faixa** (`RangeGate`).
 7. **Proteção temporal de oitava** (`OctaveJumpGuard`); verificação espectral
    de sub-harmônico fica para a fase com FFT.
@@ -90,25 +91,25 @@ Cada etapa é um `PitchDetector` ou `PitchFilter` independente e testável.
 Etapas 5–11 ficam no `TunerPipeline` (fase 2). Detalhes em
 [Resultados da fase 2](#resultados-da-fase-2--pipeline-temporal).
 
-Etapas avançadas, só se os testes mostrarem necessidade: refinamento harmônico
-via FFT, A-weighting, high-pass de 2ª ordem, mediana.
+Etapas ainda não implementadas, só se as medições reais mostrarem
+necessidade: diferença de fase, A-weighting, high-pass de 2ª ordem, mediana,
+gate de harmonicidade.
 
 ## Fases
 
 1. **YIN em Dart puro + testes sintéticos** — concluída.
-2. **Filtros temporais e histereses** (gates, octave guard temporal,
-   stability gate, One Euro, nova nota, corda, afinado, hold) — concluída.
-3. Captura real (`AudioInput`), isolate e gravações de referência.
-4. Calibração dos parâmetros com áudio real.
-5. Refinamento harmônico / correção espectral de oitava (FFT), se os erros
-   em aparelho exigirem.
+2. **Filtros temporais e histereses** — concluída.
+3. **Análise espectral**: FFT, correção de oitava, refinamento harmônico,
+   harmonicidade — concluída.
+4. Captura real (`AudioInput`), isolate e gravações de referência.
+5. Calibração dos parâmetros com áudio real.
 
 ## Resultados da fase 1 — YIN
 
 Implementação: `lib/core/dsp/yin_pitch_detector.dart` (própria, a partir do
 paper; fgnass/tuner e PitchKit foram referências técnicas e de parâmetros —
 nenhum código copiado). Testes: `test/core/dsp/`. Relatório reproduzível:
-`dart run tool/yin_report.dart`. Benchmark: `tool/yin_benchmark.dart`.
+`dart run tool/yin_report.dart`. Benchmark: `tool/dsp_benchmark.dart`.
 
 Todos os números abaixo vêm de **sinais sintéticos perfeitamente harmônicos**.
 Cordas reais têm inarmonicidade, decaimento desigual dos harmônicos e o
@@ -155,7 +156,7 @@ lags (801 vs 736) e custa ~10% mais.
   máxima **0.076**, nunca próxima de 0.90. A separação entre ruído (< 0.1) e
   tom (> 0.93 mesmo com SNR 12 dB) é ampla.
 
-### Erros de oitava (limitação conhecida, ainda não corrigida)
+### Erros de oitava do YIN isolado (corrigidos na fase 3)
 
 - **Ocorre** quando o 2º harmônico domina e tanto a fundamental quanto o 3º
   harmônico são fracos: o primeiro vale da CMNDF abaixo do limiar aparece em
@@ -173,11 +174,9 @@ lags (801 vs 736) e custa ~10% mais.
   (500 Hz → 250 Hz, confiança 1.0). Irrelevante para cordas soltas, mas
   relevante se o usuário tocar notas presas agudas.
 
-Testes de caracterização em
-`test/core/dsp/yin_octave_characterization_test.dart` afirmam o comportamento
-errado atual ("LIMITAÇÃO CONHECIDA"); a correção deve invertê-los. Candidatos:
-octave snap temporal (fase 3) e verificação de sub-harmônico/refinamento
-espectral (fase 5).
+Os testes de caracterização (hoje em `test/core/dsp/octave_error_test.dart`)
+continuam afirmando esse erro do YIN **isolado** e, desde a fase 3, exigem
+que o `HarmonicPitchDetector` o corrija.
 
 ### Ajuste feito durante a fase
 
@@ -342,6 +341,246 @@ modesta (~40%). Se o ponteiro tremer com áudio real, reduzir `minCutoff` ou
 - Durante o hold o engine emite a leitura com `isHeld = true`; a UI ainda
   não diferencia visualmente esse estado.
 - Parâmetros (janela, β, minCutoff, tolerâncias) são provisórios.
+
+## Resultados da fase 3 — análise espectral
+
+Código: `lib/core/dsp/spectral/` (`fft.dart`, `spectrum.dart`,
+`harmonic_analyzer.dart`) e `lib/core/dsp/harmonic_pitch_detector.dart`.
+Testes: `test/core/dsp/spectral/`, `test/core/dsp/harmonic_pitch_detector_test.dart`,
+`test/core/dsp/octave_error_test.dart`. Relatório:
+`dart run tool/spectral_report.dart`. Benchmark: `tool/dsp_benchmark.dart`.
+
+### Arquitetura
+
+```
+AudioFrame
+  → YinPitchDetector            (inalterado; semente: período + periodicidade)
+  → HarmonicAnalyzer            (FFT do mesmo frame + semente)
+       1. correção para baixo (semente = H2?)   → f/2
+       2. correção para cima (semente = sub-harmônico?) → 2f
+       3. harmonicidade da fundamental escolhida
+       4. refinamento por média ponderada de f_h / h
+  → HarmonicPitchDetector       (compõe; aplica a faixa 60–450 Hz)
+  → PitchEstimate { frequencyHz, periodicity, harmonicity, rms }
+  → TunerPipeline (fase 2, sem alterações)
+```
+
+- `PitchEstimate.confidence` foi renomeado para **`periodicity`** (o que o YIN
+  mede) e ganhou **`harmonicity`** (espectral, opcional). Os nomes deixam
+  explícito que periodicidade alta não garante a oitava.
+- O YIN continua utilizável e testável sozinho. O analisador não tem estado
+  entre frames.
+- O pipeline temporal não foi alterado. `harmonicity` ainda não é usada como
+  gate (sem threshold definido).
+
+### FFT
+
+Radix-2 complexa iterativa (Cooley–Tukey), própria, ~80 linhas, com tabelas
+de twiddles e bit-reversal por tamanho e sem alocação por frame. Validada
+contra DFT direta (N = 2…512), impulso, cosseno e Parseval (N = 4096).
+Nenhuma dependência: para N = 4096/8192 uma biblioteca não traria ganho
+relevante (a FFT custa ~0.1–0.3 ms; o YIN, 3–8 ms) e acrescentaria uma
+dependência para manter.
+
+Janela **Hann periódica**, DC removido antes. Tamanho da FFT = maior
+potência de 2 que cabe no frame (frames de 4096/8192 usam o frame inteiro).
+Interpolação de pico pelo estimador de razão de amplitudes para Hann
+(Grandke, 1983) — exato para senoide isolada; erro < 0.005 bin nos testes.
+
+### Correção de oitava
+
+**Para baixo** (YIN ≈ 2 × fundamental). Aceita f/2 somente se:
+
+1. há **pico em f/2** — local máximo ≥ 12× a mediana da vizinhança
+   (proeminência), ≥ −40 dB do maior pico e a ≤ 40 cents de f/2 após
+   interpolação; **e**
+2. os **harmônicos ímpares de f/2** (f/2, 1.5f, 2.5f…), que não existiriam se
+   f fosse a fundamental, somam ≥ **0.3%** (−25 dB) da energia em todas as
+   posições harmônicas de f/2;
+3. f/2 ≥ 60 Hz e f/2 resolvido pela FFT (≥ 3 bins).
+
+Exigir o pico **em f/2** (e não só em 1.5f) evita falsos positivos por
+ressonância simpática: na afinação Standard, outras cordas produzem
+componentes em 1.5·f (quintas/quartas: E2·3 ≈ B3, A2·3 ≈ E4, A2·2 ≈ 1.5·D3),
+mas nenhuma corda produz energia uma oitava abaixo da corda tocada. Com
+afinações alternativas (ex.: Drop D, com D2 e D3) isso deixa de valer.
+
+**Para cima** (YIN reportou sub-harmônico): se a semente não tem pico em f
+nem em nenhum harmônico ímpar de f, mas tem em 2f, a fundamental é 2f. Se 2f
+estiver fora da faixa, a estimativa é descartada.
+
+### Resultados nos casos de H2 dominante
+
+| Caso (todas as configs: 44.1/48 kHz × 4096/8192) | YIN isolado | Com análise espectral |
+| --- | --- | --- |
+| `[.1 1 .1 .3]` — E2, A2, D3, G3 | oitava acima | **corretos** |
+| `[.25 1 0 .2]`, `[.1 1 0 .5]` — E2…G3 | oitava acima | **corretos** |
+| `[.05 1 .05 .3]` | oitava acima | corretos, exceto E2 @ 44.1 kHz/4096 |
+| `[.02 1 .02 .3]` (ímpares a −34 dB) | oitava acima | **ainda errado** (evidência < 0.3%) |
+| B3, E4 em todos os perfis | corretos | corretos |
+| E2 sem H3, varredura da fundamental | erra com a1 ≤ 0.28 | corrige até a1 = 0.06; erra com a1 ≤ 0.05 |
+| E2 com H3 = 0.1/0.2 | erra com a1 ≤ 0.26/0.20 | 4096: corrige até a1 = 0.02 (48 kHz) / 0.03 (44.1 kHz); 8192: todos |
+
+**Falsos positivos**: 0 de 432 notas corretas (6 perfis × 6 cordas × ±25
+cents × 4 configurações) mudaram de oitava; D3 com A2 e E2 vibrando por
+simpatia não é corrigido. Com ruído (pico 0.05/0.1/0.2, 20 sementes): 80/80
+casos de H2 dominante corrigidos e 0/80 notas normais trocadas, em 4096 e
+8192.
+
+**Caso 500 Hz → 250 Hz**: resolvido. O espectro de 250 Hz não tem pico em
+250 nem em 750 Hz, só em 500 Hz → correção para cima → 500 Hz fora da faixa
+→ descartado. Idem 660 → 330 e 900 → 450 Hz.
+
+**Oitava errada desde a primeira detecção** (limitação da fase 2): coberta
+na origem. No teste de ponta a ponta (E2 `[.1 1 .1 .3]`, engine + pipeline),
+o YIN isolado exibe 164.8 Hz; com `HarmonicPitchDetector`, E2 desde a
+primeira leitura.
+
+### Refinamento harmônico
+
+Para a fundamental escolhida, localiza o pico de cada harmônico (h ≤ 12, até
+5 kHz), interpola (Grandke) e faz a média de `f_h / h` ponderada pela
+amplitude. É usado por padrão (`useSpectralRefinement: true`), com proteção:
+se divergir > 40 cents da fundamental escolhida, volta à semente.
+
+Erro máximo (6 cordas × ±25 cents; ruído com 10 sementes):
+
+| Sinal | Config | YIN | Refinado |
+| --- | --- | --- | --- |
+| limpo (violão típico) | 4096 | 0.003–0.004 c | 0.04–0.06 c |
+| limpo | 8192 | 0.003–0.004 c | 0.002–0.004 c |
+| ruído pico 0.1 | 4096 | 3.8–4.2 c | **0.8–1.0 c** |
+| ruído pico 0.1 | 8192 | 2.3–2.6 c | **0.2–0.3 c** |
+| ruído pico 0.2 | 4096 | 8.4–11.0 c | **1.6–1.9 c** |
+| ruído pico 0.2 | 8192 | 6.3–6.5 c | **0.5–0.6 c** |
+
+Com **inarmonicidade** (parciais esticados, `f_h = h·f0·√(1+B·h²)`), ambos
+ficam sustenidos em relação à fundamental, o refinado menos:
+
+| B | YIN | Refinado |
+| --- | --- | --- |
+| 1e-4 | +2.7 c | +1.6 c |
+| 3e-4 | +7.9 c | +4.8 c |
+| 1e-3 | +24 c | +12.7 c |
+
+Em sinal limpo de 4096 o refinamento é pior que o YIN, mas ambos são
+desprezíveis (< 0.06 cent). Com ruído ele é 4–10× melhor e com
+inarmonicidade fica mais perto da fundamental, por isso é o padrão.
+Valores típicos de B para cordas de violão/guitarra precisam ser medidos
+com gravações; um ajuste conjunto de f0 e B fica como evolução possível.
+
+**A-weighting não foi implementada.** No fgnass/tuner ela reduz o peso de
+rumble grave na média. Aqui os harmônicos só entram se forem picos
+proeminentes na posição exata, e o rumble abaixo de 60 Hz não cai nessas
+posições; sem áudio real não há evidência de benefício.
+
+### Diferença de fase (não implementada nesta fase)
+
+O fgnass/tuner estima a frequência instantânea pela diferença de fase entre
+**duas FFTs dentro do mesmo frame**, deslocadas por um hop. Isso não exige
+estado entre frames, mas exige que FFT + hop caibam no frame: com frames de
+4096 a FFT cairia para 2048 (23 Hz/bin a 48 kHz), e os harmônicos do E2
+(82 Hz = 3.5 bins) se sobreporiam no lóbulo principal da Hann (±2 bins),
+piorando justamente a corda mais difícil. A variante **entre frames**
+(mesma FFT em frames consecutivos) mantém a resolução, mas exige estado no
+analisador e um hop exato e conhecido entre frames — informação que só
+existirá com a captura real (fase 4). Como o refinamento estático já fica
+abaixo de 1 cent com ruído moderado, a diferença de fase fica documentada
+como melhoria possível para a fase de captura, se as medições reais
+mostrarem necessidade.
+
+### Harmonicidade
+
+`harmonicity = energia explicada × completude da série`:
+
+- **energia explicada**: energia nas bandas (±2 bins) dos picos válidos em
+  h·f0 ÷ energia total entre f0/2 e 5 kHz;
+- **completude**: harmônicos encontrados ÷ ordem do maior harmônico
+  significativo (≥ −30 dB do mais forte). Penaliza "séries" esparsas
+  (h = 5, 7, 11, 18 de um f0 grave demais); não penaliza a falta de
+  harmônicos acima do último presente (senoide pura = 1).
+
+Uma primeira versão por bandas fixas sem completude dava até 1.00 para
+parciais inarmônicos quando o YIN escolhia um f0 muito grave (qualquer
+conjunto de parciais parece harmônico de um f0 baixo o bastante); por isso a
+completude.
+
+| Sinal (48 kHz, 6 cordas) | 4096 | 8192 |
+| --- | --- | --- |
+| Senoide pura, corda rica, fundamental fraca, H2 dominante | 1.00 | 1.00 |
+| Fundamental ausente `[0 1 .7 .5]` | 0.75 | 0.75 |
+| Corda + ruído pico 0.1 / 0.2 | 1.00 / 0.99 | 1.00 / 0.99 |
+| Ruído branco (100 sementes, mediana / máx) | 0.00 / 0.01 | 0.00 / 0.01 |
+| Parciais inarmônicos (f, 1.37f, 2.21f, 3.53f) | 0.07 (0.04–0.22) | 0.07 (0.04–0.22) |
+| Mistura: corda + corda a um trítono | 0.11 (0.00–0.29) | 0.23 (0.00–0.57) |
+| Glissando harmônico 150 / 600 c/s | 1.00 / 1.00 | 1.00 / 0.99 |
+| Glissando harmônico 2000 c/s | 0.99 | 0.86 (0.69–0.98) |
+
+### Fala e sinais não tonais
+
+- **Ruído**: separado com folga (≤ 0.01 vs ≥ 0.75 de qualquer tom
+  harmônico). O gate de periodicidade já rejeitava ruído; a harmonicidade é
+  uma segunda evidência independente.
+- **Combinações não harmônicas** (parciais inarmônicos, duas cordas sem
+  relação harmônica): claramente mais baixas (≤ 0.57) que cordas (≥ 0.75).
+  Nesses sinais o YIN também costuma ter periodicidade baixa (0.4–0.8),
+  exceto quando a mistura é quase periódica (trítono ≈ 7:5 → 0.95).
+- **Glissandos harmônicos**: **não são separados**. Um glissando de um som
+  harmônico é harmônico em cada frame (1.00 até 600 c/s); só a 2000 c/s com
+  janela de 8192 a métrica cai (0.86). Fala sonora também é harmônica.
+- **Conclusão**: a harmonicidade ajuda contra ruído e misturas, mas **não**
+  resolve a limitação de fala com glissandos lentos vista na fase 2. Os
+  sinais sintéticos não permitem concluir nada sobre fala real (formantes,
+  jitter/shimmer, ruído de respiração). Nenhum gate de harmonicidade foi
+  ativado; a decisão depende de gravações reais.
+
+### 4096 vs 8192
+
+- Correção de oitava: 8192 corrige casos um pouco mais extremos (E2 com H3
+  presente: todos os casos; 4096 ainda falha com fundamental ≤ 0.01–0.02).
+- Refinamento com ruído: 8192 é ~3× mais preciso (0.5 vs 1.9 cents com ruído
+  pico 0.2).
+- Harmonicidade: igual nos casos limpos; 8192 discrimina melhor misturas e
+  glissandos rápidos.
+- Latência: inalterada pela análise espectral (mesmo frame), continua
+  85 ms (4096) vs 171 ms (8192) a 48 kHz.
+
+### Custo por frame
+
+AOT, Xeon 2.1 GHz (VM compartilhada), 3 execuções:
+
+| Config | YIN | Análise espectral | Total | % de um hop de 40 ms |
+| --- | --- | --- | --- | --- |
+| 44.1 kHz / 4096 | 2.9–3.5 ms | 0.15–0.19 ms | 3.2–3.7 ms | 8–9% |
+| 44.1 kHz / 8192 | 6.9–7.2 ms | 0.30–0.36 ms | 7.2–9.4 ms | 18–24% |
+| 48 kHz / 4096 | 3.2–4.0 ms | 0.14–0.18 ms | 3.0–4.6 ms | 8–12% |
+| 48 kHz / 8192 | 7.6–7.7 ms | 0.31–0.39 ms | 6.9–8.9 ms | 17–22% |
+
+A análise espectral acrescenta ~5% ao custo do YIN. O YIN domina; a decisão
+sobre isolate não muda: 4096 é claramente viável; 8192 é viável a cada
+40 ms, mas ocupa metade de um quadro de 60 fps no servidor e mais num
+celular — rodar fora do isolate da UI continua recomendado na fase de
+captura, a confirmar por medição em aparelho.
+
+### Impacto na latência
+
+Nenhum atraso adicional de aquisição: a análise usa o mesmo frame do YIN e
+não guarda histórico. Só soma o custo de CPU acima (~0.2–0.4 ms).
+
+### Limitações desta fase
+
+- Sinais sintéticos apenas.
+- Evidência de oitava insuficiente quando os harmônicos ímpares estão abaixo
+  de −25 dB (ex.: `[.02 1 .02 .3]`); o erro do YIN permanece nesses casos.
+- A regra "pico em f/2 obrigatório" assume afinação Standard (nenhuma corda
+  uma oitava abaixo de outra); afinações como Drop D exigirão revisão.
+- Inarmonicidade real enviesa a frequência para cima (YIN e refinado); a
+  magnitude depende de B das cordas reais.
+- Harmonicidade não distingue glissandos harmônicos (fala sonora) de
+  cordas; nenhum threshold escolhido.
+- Diferença de fase e A-weighting não implementadas.
+- `HarmonicPitchDetector` ainda não está ligado ao app (`main.dart` usa o
+  engine simulado até existir captura real).
 
 ## Tolerância de afinado
 

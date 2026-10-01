@@ -82,7 +82,7 @@ class TunerPipeline {
       if (match != null) {
         reading = TunerReading(
           frequency: filtered.frequencyHz,
-          confidence: filtered.confidence,
+          confidence: filtered.periodicity,
           string: match.string,
           cents: match.cents,
           isInTune: _inTune.update(match.string, match.cents),

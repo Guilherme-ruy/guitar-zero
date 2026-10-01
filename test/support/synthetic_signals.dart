@@ -9,8 +9,9 @@ import 'package:guitar_zero/core/audio/audio_frame.dart';
 /// xorshift32 com semente fixa), para que os testes sejam reproduzíveis em
 /// qualquer máquina.
 abstract final class SyntheticSignals {
-  /// Soma de harmônicos: `amplitude · Σ harmonics[h−1] · sin(2π·h·f0·t + φh)`
-  /// + [dcOffset] + ruído branco uniforme de pico [noise].
+  /// Soma de harmônicos: `amplitude · Σ harmonics[h−1] · sin(2π·f_h·t + φh)`
+  /// + [dcOffset] + ruído branco uniforme de pico [noise], com
+  /// `f_h = h·f0·√(1 + B·h²)` (B = [inharmonicity]; 0 = série ideal).
   ///
   /// As fases `φh` são fixas e diferentes por harmônico para evitar formas de
   /// onda simétricas artificiais. [startTimeSeconds] desloca o tempo (útil
@@ -25,20 +26,77 @@ abstract final class SyntheticSignals {
     double noise = 0,
     int seed = 1,
     double startTimeSeconds = 0,
+    double inharmonicity = 0,
   }) {
     final out = Float32List(length);
     final rng = Xorshift32(seed);
+    // Parciais esticados como em cordas reais: f_h = h·f0·√(1 + B·h²).
+    final partialHz = [
+      for (var h = 1; h <= harmonics.length; h++)
+        h * frequencyHz * math.sqrt(1 + inharmonicity * h * h),
+    ];
     for (var i = 0; i < length; i++) {
       final t = startTimeSeconds + i / sampleRate;
       var s = 0.0;
       for (var h = 1; h <= harmonics.length; h++) {
         final a = harmonics[h - 1];
-        if (a == 0 || h * frequencyHz >= sampleRate / 2) continue;
-        s += a * math.sin(2 * math.pi * h * frequencyHz * t + 0.7 * h);
+        if (a == 0 || partialHz[h - 1] >= sampleRate / 2) continue;
+        s += a * math.sin(2 * math.pi * partialHz[h - 1] * t + 0.7 * h);
       }
       var v = amplitude * s + dcOffset;
       if (noise > 0) v += noise * rng.nextSigned();
       out[i] = v;
+    }
+    return out;
+  }
+
+  /// Soma de parciais com frequências arbitrárias (não necessariamente
+  /// harmônicas): `amplitude · Σ a·sin(2π·f·t + φ)`, mais ruído opcional.
+  static Float32List partials({
+    required List<({double hz, double amplitude})> components,
+    required int sampleRate,
+    required int length,
+    double amplitude = 0.5,
+    double noise = 0,
+    int seed = 1,
+  }) {
+    final out = Float32List(length);
+    final rng = Xorshift32(seed);
+    for (var i = 0; i < length; i++) {
+      final t = i / sampleRate;
+      var s = 0.0;
+      for (var c = 0; c < components.length; c++) {
+        final p = components[c];
+        s += p.amplitude * math.sin(2 * math.pi * p.hz * t + 0.9 * (c + 1));
+      }
+      var v = amplitude * s;
+      if (noise > 0) v += noise * rng.nextSigned();
+      out[i] = v;
+    }
+    return out;
+  }
+
+  /// Glissando harmônico: a fundamental parte de [startHz] e varia
+  /// [centsPerSecond] continuamente (fase integrada, sem descontinuidade).
+  static Float32List glide({
+    required double startHz,
+    required double centsPerSecond,
+    required int sampleRate,
+    required int length,
+    List<double> harmonics = const [1, 0.6, 0.4, 0.25],
+    double amplitude = 0.5,
+  }) {
+    final out = Float32List(length);
+    final phases = List<double>.filled(harmonics.length, 0);
+    for (var i = 0; i < length; i++) {
+      final t = i / sampleRate;
+      final f = startHz * math.pow(2, centsPerSecond * t / 1200);
+      var s = 0.0;
+      for (var h = 1; h <= harmonics.length; h++) {
+        phases[h - 1] += 2 * math.pi * h * f / sampleRate;
+        s += harmonics[h - 1] * math.sin(phases[h - 1] + 0.7 * h);
+      }
+      out[i] = amplitude * s;
     }
     return out;
   }

@@ -1,7 +1,8 @@
 import '../pitch_estimate.dart';
 import '../pitch_filter.dart';
 
-/// Descarta estimativas com confiança abaixo de [minConfidence].
+/// Descarta estimativas com periodicidade (confiança do detector) abaixo de
+/// [minConfidence].
 class ConfidenceGate implements PitchFilter {
   const ConfidenceGate({required this.minConfidence});
 
@@ -9,7 +10,7 @@ class ConfidenceGate implements PitchFilter {
 
   @override
   PitchEstimate? process(PitchEstimate? estimate, Duration timestamp) =>
-      estimate != null && estimate.confidence >= minConfidence
+      estimate != null && estimate.periodicity >= minConfidence
       ? estimate
       : null;
 

@@ -35,14 +35,14 @@ class PitchSequenceBuilder {
     int count, {
     double cents = 0,
     double jitterCents = 0,
-    double confidence = 0.97,
+    double periodicity = 0.97,
   }) {
     for (var i = 0; i < count; i++) {
       final c = cents + jitterCents * _rng.nextSigned();
       _add(
         PitchEstimate(
           frequencyHz: baseHz * _centsRatio(c),
-          confidence: confidence,
+          periodicity: periodicity,
         ),
       );
     }
@@ -62,7 +62,7 @@ class PitchSequenceBuilder {
           (toCents - fromCents) * i / (count - 1) +
           jitterCents * _rng.nextSigned();
       _add(
-        PitchEstimate(frequencyHz: baseHz * _centsRatio(c), confidence: 0.97),
+        PitchEstimate(frequencyHz: baseHz * _centsRatio(c), periodicity: 0.97),
       );
     }
   }
@@ -82,14 +82,14 @@ class PitchSequenceBuilder {
     int count, {
     double minHz = 80,
     double maxHz = 400,
-    double confidence = 0.95,
+    double periodicity = 0.95,
   }) {
     for (var i = 0; i < count; i++) {
       final u = (_rng.nextSigned() + 1) / 2;
       _add(
         PitchEstimate(
           frequencyHz: minHz * _centsRatio(u * centsBetween(maxHz, minHz)),
-          confidence: confidence,
+          periodicity: periodicity,
         ),
       );
     }
@@ -101,7 +101,7 @@ class PitchSequenceBuilder {
     int count, {
     double startHz = 160,
     double maxCentsPerSecond = 600,
-    double confidence = 0.95,
+    double periodicity = 0.95,
   }) {
     var cents = 0.0;
     var velocity = 0.0;
@@ -115,7 +115,7 @@ class PitchSequenceBuilder {
       _add(
         PitchEstimate(
           frequencyHz: startHz * _centsRatio(cents + 5 * _rng.nextSigned()),
-          confidence: confidence,
+          periodicity: periodicity,
         ),
       );
     }

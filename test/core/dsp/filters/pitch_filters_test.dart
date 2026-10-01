@@ -7,8 +7,8 @@ import 'package:guitar_zero/core/dsp/filters/stability_gate.dart';
 import 'package:guitar_zero/core/dsp/pitch_estimate.dart';
 import 'package:guitar_zero/core/music/pitch_math.dart';
 
-PitchEstimate est(double hz, [double confidence = 0.97]) =>
-    PitchEstimate(frequencyHz: hz, confidence: confidence);
+PitchEstimate est(double hz, [double periodicity = 0.97]) =>
+    PitchEstimate(frequencyHz: hz, periodicity: periodicity);
 
 Duration ms(int v) => Duration(milliseconds: v);
 
@@ -202,7 +202,7 @@ void main() {
 
     test('preserva a confiança da estimativa', () {
       final s = newSmoother();
-      expect(s.process(est(110, 0.93), Duration.zero)!.confidence, 0.93);
+      expect(s.process(est(110, 0.93), Duration.zero)!.periodicity, 0.93);
     });
   });
 }

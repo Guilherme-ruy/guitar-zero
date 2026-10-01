@@ -62,7 +62,7 @@ class YinConfig {
 ///    da faixa, a fundamental real está fora dela e retorna `null`;
 /// 6. interpolação parabólica sobre `d(τ)` bruto (o paper recomenda `d` em
 ///    vez de `d'` para evitar viés), `f = sr / τ_refinado`;
-/// 7. `confidence = 1 − d'(τ)`, limitada a [0, 1].
+/// 7. `periodicity = 1 − d'(τ)`, limitada a [0, 1].
 ///
 /// Síncrono, sem I/O e sem alocação por frame (buffers reaproveitados).
 class YinPitchDetector implements PitchDetector {
@@ -169,10 +169,10 @@ class YinPitchDetector implements PitchDetector {
     }
 
     // 7. Confiança.
-    final confidence = (1 - cmnd[tau]).clamp(0.0, 1.0);
+    final periodicity = (1 - cmnd[tau]).clamp(0.0, 1.0);
     return PitchEstimate(
       frequencyHz: frequency,
-      confidence: confidence,
+      periodicity: periodicity,
       rms: rms,
     );
   }
