@@ -85,8 +85,8 @@ Hoje o app mostra leituras **simuladas** (selo DEMO): ainda não usa o microfone
 
 ## CI
 
-[`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda em todo push na
-`main` e em pull requests:
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda em todo push (qualquer
+branch) e em pull requests para a `main`:
 
 1. `flutter pub get`
 2. `dart format --set-exit-if-changed`
