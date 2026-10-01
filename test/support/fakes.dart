@@ -6,6 +6,7 @@ import 'package:guitar_zero/core/audio/audio_input.dart';
 import 'package:guitar_zero/core/dsp/pitch_detector.dart';
 import 'package:guitar_zero/core/dsp/pitch_estimate.dart';
 import 'package:guitar_zero/core/tuner/tuner_config.dart';
+import 'package:guitar_zero/core/tuner/tuner_diagnostics.dart';
 import 'package:guitar_zero/core/tuner/tuner_engine.dart';
 import 'package:guitar_zero/core/tuner/tuner_reading.dart';
 
@@ -65,6 +66,9 @@ class FakeTunerEngine implements TunerEngine {
 
   @override
   Stream<TunerReading?> get readings => _readings.stream;
+
+  @override
+  Stream<TunerDiagnostics> get diagnostics => const Stream.empty();
 
   void emit(TunerReading? reading) => _readings.add(reading);
 

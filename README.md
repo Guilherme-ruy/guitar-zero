@@ -77,7 +77,7 @@ dart run tool/temporal_report.dart # pipeline temporal: janela 3 vs 5, beta
 | Teoria musical (notas, cents, Standard, corda mais próxima) | ✅ implementado e testado |
 | Contratos `AudioInput`, `PitchDetector`, `PitchFilter`, `TunerEngine` | ✅ |
 | `PitchTunerEngine` (orquestração do pipeline) | ✅ testado com fakes |
-| Tela do afinador | ✅ usa o microfone real; modo demo opcional |
+| Tela do afinador | ✅ usa o microfone real; modo demo opcional; painel de diagnóstico oculto |
 | Captura de microfone (`record`, PCM16, sem AGC/NS/AEC) + DSP em isolate | ✅ implementado e testado com fakes; ⚠️ **não validado em aparelho** |
 | Detector YIN em Dart puro (`YinPitchDetector`) | ✅ testado com sinais sintéticos |
 | Pipeline temporal (gates, octave guard, stability gate, One Euro, histereses, hold) | ✅ testado com sequências sintéticas |
@@ -102,6 +102,22 @@ flutter test
 `guitar-zero-apk` (APK release, assinado com a chave de debug — só para
 teste). Baixe em *Actions → CI → execução → Artifacts* e instale no Android
 (permitindo "fontes desconhecidas").
+
+## Teste em aparelho
+
+A captura ao vivo ainda não foi validada em celular. Roteiro curto:
+
+1. Instale o APK do artefato `guitar-zero-apk` e permita o microfone.
+2. Toque longo em **GUITAR ZERO** abre o painel de diagnóstico: tempo de
+   DSP por frame, frames descartados, frequência bruta, periodicidade,
+   harmonicidade e nível RMS.
+3. Toque cada corda solta algumas vezes (com e sem abafar) e gire a tarraxa
+   devagar e rápido.
+4. Observe: tempo até a nota aparecer, corda identificada, tremor do
+   ponteiro, se a leitura muda de corda/oitava no fim da nota, e o
+   comportamento com fala ou ruído por perto.
+5. Reporte com prints do painel (principalmente "DSP … ms" e
+   "descartados") e o modelo do aparelho.
 
 ## CI
 

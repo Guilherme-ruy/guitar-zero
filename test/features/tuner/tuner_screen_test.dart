@@ -106,4 +106,16 @@ void main() {
     expect(find.text('110.0 Hz'), findsOneWidget);
     expect(find.text('Toque qualquer corda'), findsOneWidget);
   });
+
+  testWidgets('toque longo no logo abre e fecha o diagnóstico', (tester) async {
+    await tester.pumpWidget(GuitarZeroApp(engine: FakeTunerEngine()));
+    await tester.pump();
+    expect(find.textContaining('diagnóstico'), findsNothing);
+    await tester.longPress(find.text('GUITAR ZERO'));
+    await tester.pump();
+    expect(find.text('diagnóstico: aguardando áudio…'), findsOneWidget);
+    await tester.longPress(find.text('GUITAR ZERO'));
+    await tester.pump();
+    expect(find.textContaining('diagnóstico'), findsNothing);
+  });
 }

@@ -7,6 +7,7 @@ import 'package:guitar_zero/core/dsp/pitch_detector.dart';
 import 'package:guitar_zero/core/dsp/pitch_estimate.dart';
 import 'package:guitar_zero/core/music/pitch_math.dart';
 import 'package:guitar_zero/core/tuner/frame_processor.dart';
+import 'package:guitar_zero/core/tuner/tuner_diagnostics.dart';
 import 'package:guitar_zero/core/tuner/tuner_reading.dart';
 
 import '../../support/synthetic_signals.dart';
@@ -44,6 +45,8 @@ Future<List<TunerReading?>> collect(
 }
 
 void main() {
+  _diagnosticsTests();
+
   test(
     'isolate produz as mesmas leituras que o processamento inline',
     () async {
@@ -119,6 +122,24 @@ void main() {
       feed: () => processor.process(frames[1]),
     );
     expect(second, hasLength(1));
+    await processor.dispose();
+  });
+}
+
+void _diagnosticsTests() {
+  test('diagnóstico por frame: estimativa bruta, tempo e descartes', () async {
+    final frames = a2Frames();
+    final processor = IsolateFrameProcessor();
+    await processor.start();
+    final diagnostics = <TunerDiagnostics>[];
+    processor.diagnostics.listen(diagnostics.add);
+    await collect(processor, 1, feed: () => processor.process(frames[0]));
+    await pumpEventQueue();
+    final d = diagnostics.single;
+    expect(d.estimate!.frequencyHz, closeTo(frequencyFromMidi(44.9), 0.1));
+    expect(d.processingTime, greaterThan(Duration.zero));
+    expect(d.rmsDb, lessThan(0));
+    expect(d.droppedFrames, 0);
     await processor.dispose();
   });
 }

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../app/theme.dart';
 import '../../core/tuner/tuner_engine.dart';
 import 'tuner_controller.dart';
+import 'widgets/diagnostics_panel.dart';
 import 'widgets/note_display.dart';
 import 'widgets/string_board.dart';
 import 'widgets/tuner_hint.dart';
@@ -26,6 +27,7 @@ class TunerScreen extends StatefulWidget {
 
 class _TunerScreenState extends State<TunerScreen> with WidgetsBindingObserver {
   late final TunerController _controller = TunerController(widget.engine);
+  bool _showDiagnostics = false;
 
   @override
   void initState() {
@@ -70,10 +72,18 @@ class _TunerScreenState extends State<TunerScreen> with WidgetsBindingObserver {
               padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
               child: Column(
                 children: [
-                  _Header(
-                    tuningName: _controller.tuning.name,
-                    isDemo: widget.isDemo,
+                  GestureDetector(
+                    onLongPress: () =>
+                        setState(() => _showDiagnostics = !_showDiagnostics),
+                    child: _Header(
+                      tuningName: _controller.tuning.name,
+                      isDemo: widget.isDemo,
+                    ),
                   ),
+                  if (_showDiagnostics) ...[
+                    const SizedBox(height: 12),
+                    DiagnosticsPanel(diagnostics: widget.engine.diagnostics),
+                  ],
                   const Spacer(),
                   // Leitura mantida após o som acabar (hold): atenuada.
                   AnimatedOpacity(

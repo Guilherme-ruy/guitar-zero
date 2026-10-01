@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import '../music/pitch_math.dart';
 import 'tuner_config.dart';
+import 'tuner_diagnostics.dart';
 import 'tuner_engine.dart';
 import 'tuner_reading.dart';
 
@@ -36,6 +37,9 @@ class SimulatedTunerEngine implements TunerEngine {
 
   @override
   Stream<TunerReading?> get readings => _readings.stream;
+
+  @override
+  Stream<TunerDiagnostics> get diagnostics => const Stream.empty();
 
   @override
   Future<void> start() async {

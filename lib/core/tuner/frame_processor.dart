@@ -5,8 +5,10 @@ import 'dart:typed_data';
 import '../audio/audio_frame.dart';
 import '../dsp/harmonic_pitch_detector.dart';
 import '../dsp/pitch_detector.dart';
+import '../dsp/pitch_estimate.dart';
 import '../dsp/pitch_filter.dart';
 import 'tuner_config.dart';
+import 'tuner_diagnostics.dart';
 import 'tuner_pipeline.dart';
 import 'tuner_reading.dart';
 
@@ -16,6 +18,9 @@ import 'tuner_reading.dart';
 abstract interface class FrameProcessor {
   /// Uma leitura (ou `null`) por frame processado, em ordem.
   Stream<TunerReading?> get readings;
+
+  /// Medidas por frame processado (depuração e calibração).
+  Stream<TunerDiagnostics> get diagnostics;
 
   Future<void> start();
 
@@ -28,6 +33,34 @@ abstract interface class FrameProcessor {
   void reset();
 
   Future<void> dispose();
+}
+
+/// Processa um frame e mede o tempo gasto.
+({TunerReading? reading, TunerDiagnostics diagnostics}) _processFrame(
+  PitchDetector detector,
+  TunerPipeline pipeline,
+  AudioFrame frame,
+) {
+  final stopwatch = Stopwatch()..start();
+  PitchEstimate? estimate;
+  TunerReading? reading;
+  try {
+    estimate = detector.detect(frame);
+    reading = pipeline.process(estimate, frame.timestamp);
+  } catch (_) {
+    // Um frame problemático não pode derrubar o processamento (no isolate,
+    // o worker ficaria sem responder). Trata como silêncio.
+    estimate = null;
+    reading = pipeline.process(null, frame.timestamp);
+  }
+  return (
+    reading: reading,
+    diagnostics: TunerDiagnostics(
+      timestamp: frame.timestamp,
+      processingTime: stopwatch.elapsed,
+      estimate: estimate,
+    ),
+  );
 }
 
 /// Processa no isolate atual, de forma síncrona. Usado em testes e quando o
@@ -43,16 +76,24 @@ class InlineFrameProcessor implements FrameProcessor {
   final TunerPipeline _pipeline;
   final StreamController<TunerReading?> _readings =
       StreamController<TunerReading?>.broadcast(sync: true);
+  final StreamController<TunerDiagnostics> _diagnostics =
+      StreamController<TunerDiagnostics>.broadcast(sync: true);
 
   @override
   Stream<TunerReading?> get readings => _readings.stream;
 
   @override
+  Stream<TunerDiagnostics> get diagnostics => _diagnostics.stream;
+
+  @override
   Future<void> start() async {}
 
   @override
-  void process(AudioFrame frame) =>
-      _readings.add(_pipeline.process(detector.detect(frame), frame.timestamp));
+  void process(AudioFrame frame) {
+    final result = _processFrame(detector, _pipeline, frame);
+    _diagnostics.add(result.diagnostics);
+    _readings.add(result.reading);
+  }
 
   @override
   void reset() {
@@ -61,7 +102,10 @@ class InlineFrameProcessor implements FrameProcessor {
   }
 
   @override
-  Future<void> dispose() => _readings.close();
+  Future<void> dispose() async {
+    await _readings.close();
+    await _diagnostics.close();
+  }
 }
 
 /// Cria o detector dentro do isolate de processamento.
@@ -86,6 +130,8 @@ class IsolateFrameProcessor implements FrameProcessor {
 
   final StreamController<TunerReading?> _readings =
       StreamController<TunerReading?>.broadcast();
+  final StreamController<TunerDiagnostics> _diagnostics =
+      StreamController<TunerDiagnostics>.broadcast();
   Isolate? _isolate;
   ReceivePort? _fromWorker;
   SendPort? _toWorker;
@@ -100,6 +146,9 @@ class IsolateFrameProcessor implements FrameProcessor {
   Stream<TunerReading?> get readings => _readings.stream;
 
   @override
+  Stream<TunerDiagnostics> get diagnostics => _diagnostics.stream;
+
+  @override
   Future<void> start() async {
     if (_isolate != null) return;
     final fromWorker = ReceivePort();
@@ -109,9 +158,14 @@ class IsolateFrameProcessor implements FrameProcessor {
       switch (message) {
         case final SendPort port:
           ready.complete(port);
-        case _WorkerResult(:final generation, :final reading):
+        case _WorkerResult(
+          :final generation,
+          :final reading,
+          :final diagnostics,
+        ):
           _busy = false;
           if (generation == _generation && !_readings.isClosed) {
+            _diagnostics.add(diagnostics.withDroppedFrames(droppedFrames));
             _readings.add(reading);
           }
           final next = _pending;
@@ -166,6 +220,7 @@ class IsolateFrameProcessor implements FrameProcessor {
     _fromWorker?.close();
     _toWorker = null;
     await _readings.close();
+    await _diagnostics.close();
   }
 }
 
@@ -196,10 +251,11 @@ class _WorkerReset {
 }
 
 class _WorkerResult {
-  const _WorkerResult(this.generation, this.reading);
+  const _WorkerResult(this.generation, this.reading, this.diagnostics);
 
   final int generation;
   final TunerReading? reading;
+  final TunerDiagnostics diagnostics;
 }
 
 void _workerMain(_WorkerSetup setup) {
@@ -215,15 +271,10 @@ void _workerMain(_WorkerSetup setup) {
           sampleRate: message.sampleRate,
           timestamp: Duration(microseconds: message.timestampMicros),
         );
-        TunerReading? reading;
-        try {
-          reading = pipeline.process(detector.detect(frame), frame.timestamp);
-        } catch (_) {
-          // Um frame problemático não pode derrubar o worker: sem resposta,
-          // o processador ficaria esperando para sempre. Trata como silêncio.
-          reading = pipeline.process(null, frame.timestamp);
-        }
-        setup.replyTo.send(_WorkerResult(message.generation, reading));
+        final result = _processFrame(detector, pipeline, frame);
+        setup.replyTo.send(
+          _WorkerResult(message.generation, result.reading, result.diagnostics),
+        );
       case _WorkerReset():
         detector.reset();
         pipeline.reset();

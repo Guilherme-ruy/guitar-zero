@@ -6,6 +6,7 @@ import '../dsp/pitch_detector.dart';
 import '../dsp/pitch_filter.dart';
 import 'frame_processor.dart';
 import 'tuner_config.dart';
+import 'tuner_diagnostics.dart';
 import 'tuner_engine.dart';
 import 'tuner_reading.dart';
 
@@ -53,6 +54,9 @@ class PitchTunerEngine implements TunerEngine {
 
   @override
   Stream<TunerReading?> get readings => _readings.stream;
+
+  @override
+  Stream<TunerDiagnostics> get diagnostics => _processor.diagnostics;
 
   @override
   Future<void> start() async {

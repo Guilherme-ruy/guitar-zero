@@ -1,4 +1,5 @@
 import 'tuner_config.dart';
+import 'tuner_diagnostics.dart';
 import 'tuner_reading.dart';
 
 /// Ponto de entrada do afinador para a camada de estado.
@@ -13,6 +14,9 @@ abstract interface class TunerEngine {
   /// Leituras contínuas. `null` significa que nenhuma nota está sendo
   /// detectada no momento (silêncio, ruído ou baixa confiança).
   Stream<TunerReading?> get readings;
+
+  /// Medidas por frame para depuração/calibração (pode ser vazio).
+  Stream<TunerDiagnostics> get diagnostics;
 
   /// Inicia a escuta. Pode lançar `AudioInputException`.
   Future<void> start();

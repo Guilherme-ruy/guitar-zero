@@ -52,6 +52,9 @@ Regra de dependência: `core/` não importa Flutter (exceto `dart:` e
    proteção temporal de oitava, stability gate, One Euro), a histerese de
    corda, a histerese de afinado e o hold de silêncio. Usa timestamps.
 4. `TunerEngine.readings` emite `TunerReading` (ou `null` em silêncio).
+   `TunerEngine.diagnostics` emite, por frame, a estimativa bruta, o tempo de
+   processamento e os frames descartados — usado só pelo painel de
+   diagnóstico oculto, para calibração em aparelho.
 7. `TunerController` mantém o estado de apresentação (status, leitura, corda
    ativa, cordas já afinadas) e notifica a UI.
 8. Os widgets apenas interpolam visualmente entre leituras.
