@@ -161,6 +161,60 @@ void main() {
     await engine.dispose();
   });
 
+  group('falha da captura durante o uso', () {
+    test(
+      'erro do microfone chega como AudioInputException nas leituras',
+      () async {
+        final engine = PitchTunerEngine(
+          audioInput: input,
+          detector: ScriptedPitchDetector([]),
+        );
+        final errors = <Object>[];
+        engine.readings.listen((_) {}, onError: errors.add);
+        await engine.start();
+        input.fail(StateError('microfone tomado por outro app'));
+        await pumpEventQueue();
+        expect(errors.single, isA<AudioInputException>());
+        await engine.dispose();
+      },
+    );
+
+    test('fim inesperado do stream vira erro "unavailable"', () async {
+      final engine = PitchTunerEngine(
+        audioInput: input,
+        detector: ScriptedPitchDetector([]),
+      );
+      final errors = <Object>[];
+      engine.readings.listen((_) {}, onError: errors.add);
+      await engine.start();
+      await input.end();
+      await pumpEventQueue();
+      expect(
+        errors.single,
+        isA<AudioInputException>().having(
+          (e) => e.failure,
+          'failure',
+          AudioInputFailure.unavailable,
+        ),
+      );
+      await engine.dispose();
+    });
+
+    test('stop e dispose normais não geram erro', () async {
+      final engine = PitchTunerEngine(
+        audioInput: input,
+        detector: ScriptedPitchDetector([]),
+      );
+      final errors = <Object>[];
+      engine.readings.listen((_) {}, onError: errors.add);
+      await engine.start();
+      await engine.stop();
+      await engine.dispose();
+      await pumpEventQueue();
+      expect(errors, isEmpty);
+    });
+  });
+
   group('oitava errada desde a primeira detecção (sem histórico)', () {
     // E2 com H2 dominante e H1/H3 fracos: o YIN isolado erra a oitava já no
     // primeiro frame, e a proteção temporal não tem referência.

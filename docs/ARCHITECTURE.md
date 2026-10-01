@@ -80,6 +80,11 @@ YIN, filtros, octave guard nem histereses.
 
 ## Ciclo de vida e privacidade
 
+- Falhas da captura **durante o uso** (microfone tomado por outro app,
+  interrupção, stream encerrado) chegam como erro `AudioInputException` no
+  stream de leituras; o controller para o engine e mostra "Microfone
+  indisponível" com a opção de tentar de novo.
+
 - `TunerScreen` inicia a escuta ao abrir e para quando o app sai de primeiro
   plano (`paused`/`hidden`/`detached`). O microfone nunca fica ativo em
   segundo plano.

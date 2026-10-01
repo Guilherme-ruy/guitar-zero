@@ -67,7 +67,16 @@ class PitchTunerEngine implements TunerEngine {
       _processorStarted = true;
     }
     _processor.reset();
-    _frameSubscription = _audioInput.frames.listen(_processor.process);
+    _frameSubscription = _audioInput.frames.listen(
+      _processor.process,
+      onError: _onCaptureError,
+      onDone: () => _onCaptureError(
+        const AudioInputException(
+          AudioInputFailure.unavailable,
+          'captura encerrada',
+        ),
+      ),
+    );
     try {
       await _audioInput.start();
     } catch (_) {
@@ -75,6 +84,19 @@ class PitchTunerEngine implements TunerEngine {
       _frameSubscription = null;
       rethrow;
     }
+  }
+
+  /// Falha da captura durante o uso (microfone tomado por outro app,
+  /// interrupção, stream encerrado): vai para quem escuta [readings].
+  void _onCaptureError(Object error) {
+    _frameSubscription = null;
+    _processor.reset();
+    if (_readings.isClosed) return;
+    _readings.addError(
+      error is AudioInputException
+          ? error
+          : AudioInputException(AudioInputFailure.unavailable, '$error'),
+    );
   }
 
   @override

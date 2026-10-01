@@ -12,7 +12,8 @@ abstract interface class TunerEngine {
   TunerConfig get config;
 
   /// Leituras contínuas. `null` significa que nenhuma nota está sendo
-  /// detectada no momento (silêncio, ruído ou baixa confiança).
+  /// detectada no momento (silêncio, ruído ou baixa confiança). Falhas da
+  /// captura durante o uso chegam como erro `AudioInputException`.
   Stream<TunerReading?> get readings;
 
   /// Medidas por frame para depuração/calibração (pode ser vazio).

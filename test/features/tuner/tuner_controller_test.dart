@@ -52,6 +52,23 @@ void main() {
     controller.dispose();
   });
 
+  test('falha da captura durante o uso → microfone indisponível', () async {
+    final engine = FakeTunerEngine();
+    final controller = TunerController(engine);
+    await controller.start();
+    engine.emit(_reading(1, 3));
+    engine.fail(
+      const AudioInputException(AudioInputFailure.unavailable, 'interrompido'),
+    );
+    await pumpEventQueue();
+    expect(controller.status, TunerStatus.unavailable);
+    expect(controller.reading, isNull);
+    // Tentar de novo volta a ouvir.
+    await controller.start();
+    expect(controller.status, TunerStatus.listening);
+    controller.dispose();
+  });
+
   test('stop durante o start (ex.: app pausado no pedido de permissão) '
       'não deixa o engine rodando', () async {
     final engine = _SlowStartEngine();

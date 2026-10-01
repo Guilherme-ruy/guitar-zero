@@ -19,6 +19,11 @@ class FakeAudioInput implements AudioInput {
   @override
   Stream<AudioFrame> get frames => _frames.stream;
 
+  void fail(Object error) => _frames.addError(error);
+
+  /// Simula o fim inesperado da captura.
+  Future<void> end() => _frames.close();
+
   void emit([AudioFrame? frame]) => _frames.add(
     frame ??
         AudioFrame(
@@ -71,6 +76,8 @@ class FakeTunerEngine implements TunerEngine {
   Stream<TunerDiagnostics> get diagnostics => const Stream.empty();
 
   void emit(TunerReading? reading) => _readings.add(reading);
+
+  void fail(Object error) => _readings.addError(error);
 
   @override
   Future<void> start() async {

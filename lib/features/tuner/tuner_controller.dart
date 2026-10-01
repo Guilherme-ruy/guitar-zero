@@ -47,7 +47,10 @@ class TunerController extends ChangeNotifier {
     }
     final session = ++_session;
     _setStatus(TunerStatus.starting);
-    _subscription ??= _engine.readings.listen(_onReading);
+    _subscription ??= _engine.readings.listen(
+      _onReading,
+      onError: _onEngineError,
+    );
     try {
       await _engine.start();
       if (session != _session) {
@@ -71,6 +74,21 @@ class TunerController extends ChangeNotifier {
     await _engine.stop();
     _reading = null;
     _setStatus(TunerStatus.idle);
+  }
+
+  /// Falha da captura durante o uso: para o engine e mostra o motivo; o
+  /// usuário pode tentar de novo.
+  void _onEngineError(Object error) {
+    if (_disposed) return;
+    _session++;
+    unawaited(_engine.stop());
+    _reading = null;
+    _setStatus(
+      error is AudioInputException &&
+              error.failure == AudioInputFailure.permissionDenied
+          ? TunerStatus.permissionDenied
+          : TunerStatus.unavailable,
+    );
   }
 
   void _onReading(TunerReading? reading) {
