@@ -9,6 +9,8 @@ class TunerConfig {
   const TunerConfig({
     this.tuning = Tuning.standard,
     this.minConfidence = 0.9,
+    this.relaxedMinPeriodicity = 0.6,
+    this.minHarmonicity = 0.7,
     this.minFrequencyHz = 60,
     this.maxFrequencyHz = 450,
     this.harmonicJumpToleranceCents = 50,
@@ -35,9 +37,16 @@ class TunerConfig {
 
   // --- Gates -------------------------------------------------------------
 
-  /// Estimativas com confiança abaixo disto são descartadas. 0.90 é ponto de
-  /// partida; microfone, AGC e ruído podem baixar a confiança de notas reais.
+  /// Periodicidade mínima para aceitar uma estimativa só por ela. 0.90 é
+  /// ponto de partida; microfone, AGC e ruído podem baixá-la em notas reais.
   final double minConfidence;
+
+  /// Caminho combinado: periodicidade ≥ isto **e** harmonicidade ≥
+  /// [minHarmonicity] também aceita (duas cordas soando ao mesmo tempo
+  /// derrubam a periodicidade da nota dominante; ver ConfidenceGate).
+  final double relaxedMinPeriodicity;
+
+  final double minHarmonicity;
 
   /// Faixa aceita de fundamentais, em Hz.
   final double minFrequencyHz;

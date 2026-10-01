@@ -23,6 +23,25 @@ void main() {
       expect(gate.process(est(110, 0.89), Duration.zero), isNull);
       expect(gate.process(null, Duration.zero), isNull);
     });
+
+    const combined = ConfidenceGate(
+      minConfidence: 0.9,
+      relaxedMinPeriodicity: 0.6,
+      minHarmonicity: 0.7,
+    );
+    PitchEstimate both(double p, double? h) =>
+        PitchEstimate(frequencyHz: 196, periodicity: p, harmonicity: h);
+
+    test('caminho combinado: periodicidade e harmonicidade juntas', () {
+      expect(combined.process(both(0.75, 0.8), Duration.zero), isNotNull);
+      expect(combined.process(both(0.75, 0.69), Duration.zero), isNull);
+      expect(combined.process(both(0.59, 0.95), Duration.zero), isNull);
+    });
+
+    test('sem harmonicidade, só a periodicidade conta', () {
+      expect(combined.process(both(0.75, null), Duration.zero), isNull);
+      expect(combined.process(both(0.95, null), Duration.zero), isNotNull);
+    });
   });
 
   group('RangeGate', () {

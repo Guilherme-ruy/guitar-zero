@@ -51,7 +51,11 @@ class TunerPipeline {
   /// Cadeia padrão de filtros de pitch, configurada por [config].
   static PitchFilter standardPitchFilter(TunerConfig config) =>
       PitchFilterChain([
-        ConfidenceGate(minConfidence: config.minConfidence),
+        ConfidenceGate(
+          minConfidence: config.minConfidence,
+          relaxedMinPeriodicity: config.relaxedMinPeriodicity,
+          minHarmonicity: config.minHarmonicity,
+        ),
         RangeGate(
           minFrequencyHz: config.minFrequencyHz,
           maxFrequencyHz: config.maxFrequencyHz,

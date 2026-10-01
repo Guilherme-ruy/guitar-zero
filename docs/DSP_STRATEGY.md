@@ -670,6 +670,52 @@ ajuste tem mais variância que a média simples (pior caso 3.2 c vs 1.9 c em
 **fundamental** (parcial 1), como afinadores convencionais, e não o pitch
 composto. Em cordas muito inarmônicas isso difere do YIN em até ~20 c.
 
+### Troca de corda e ruído (cenários reais misturados)
+
+Notas isoladas não representam o uso real: ao tocar a próxima corda, a
+anterior continua soando. `tool/real_scenarios.dart` mistura as gravações
+(nova corda em 1.5 s) e adiciona ruído; os casos principais viraram testes
+(`test/core/real_scenarios_test.dart`).
+
+**Achado**: com duas cordas soando, a mistura não é periódica em nenhum
+período da faixa (D3 + G3 = razão 4:3 → período comum em 49 Hz). A
+periodicidade da nota dominante cai para 0.65–0.85 **com o detector
+acertando** a nota nova, e o gate de 0.90 a descartava: a G3 só aparecia
+quando a D3 era cortada (1.75 s).
+
+**Decisão**: gate com evidência combinada (`ConfidenceGate`) — aceita
+periodicidade ≥ 0.90, **ou** periodicidade ≥ 0.60 **e** harmonicidade ≥
+0.70. Ruído (harmonicidade ≤ 0.01) e misturas inarmônicas (≤ 0.57) seguem
+rejeitados; o stability gate continua exigindo 3 estimativas concordantes.
+Os limiares vêm destas medições e são provisórios.
+
+| Troca (nova corda no volume cheio) | Antes | Depois |
+| --- | --- | --- |
+| D3 → G3 | 1752 ms | **152 ms** |
+| B3 → E2 | 1152 ms | **352 ms** |
+| E2 → B3 (×3, com ataque) | 152 ms | 152 ms |
+| E2 → A2, E4 → A2 | 192 ms | 192 ms |
+| E2 → B3 com a nova a 25% | nunca | 1512 ms |
+| A2 → E4 (×3) | nunca | nunca (ver limitação) |
+
+Ruído branco (SNR sobre o RMS da nota inteira): nenhuma corda ou oitava
+errada em nenhum nível. Com o gate combinado, a E2 inarmônica passa a
+aparecer com SNR de 10 dB (antes: nunca) e todas as cordas têm mais leituras
+vivas. Aquisição nas 214 notas: p90 253 → 213 ms, máx 1053 → 893 ms; 0 notas
+com oitava/corda errada.
+
+A variação total da leitura na sustentação aumentou em notas que derivam
+de verdade (a E2 inarmônica desce ~7 c enquanto decai), porque agora a
+leitura começa mais cedo. O teste de regressão mede o que importa para o
+ponteiro — salto entre leituras consecutivas (≤ 2.4 c) — e trata a deriva
+total à parte.
+
+**Não implementado, por falta de separação nos dados**: escolher 3f quando a
+energia se concentra nos harmônicos múltiplos de 3 (caso A2 → E4). Notas
+reais sozinhas chegam a 0.85–0.96 de energia nesses harmônicos, enquanto a
+mistura A2 + E4 fica em 0.13–0.50 — a regra trocaria notas isoladas e não
+resolveria a mistura.
+
 ### Limitações que continuam
 
 - Captura ao vivo não validada (latência real, `VOICE_RECOGNITION` em
@@ -678,6 +724,12 @@ composto. Em cordas muito inarmônicas isso difere do YIN em até ~20 c.
 - `HarmonicJumpGuard` depende de RMS: uma corda tocada muito fraca enquanto
   outra ainda soa alto pode não gerar "ataque"; nesse caso a nota nova só
   aparece após 600 ms.
+- **Duas cordas em volume parecido** (ex.: D3 ainda forte e G3 tocada a
+  −6 dB) formam um sinal polifônico: a nota nova só aparece quando domina ou
+  quando a anterior é abafada. Resolver exige análise multi-pitch guiada pelo
+  ataque (quais parciais surgiram), não implementada.
+- **A2 → E4 com a A2 ainda soando forte**: E4 = 3·A2, o sinal é de fato
+  periódico em A2 e a tela mostra A2 até ela decair ou ser abafada.
 
 ## Tolerância de afinado
 

@@ -66,6 +66,7 @@ dart run tool/yin_report.dart      # caracterização com sinais sintéticos
 dart run tool/dsp_benchmark.dart   # custo por frame (YIN, espectral, total)
 dart run tool/spectral_report.dart # oitava, refinamento, harmonicidade
 dart run tool/real_audio_eval.dart <dir_wav_44k> <selected.json>  # áudio real (NSynth)
+dart run tool/real_scenarios.dart  # troca de corda com sobreposição, ruído
 dart run tool/temporal_report.dart # pipeline temporal: janela 3 vs 5, beta
 ```
 
@@ -84,6 +85,7 @@ dart run tool/temporal_report.dart # pipeline temporal: janela 3 vs 5, beta
 | Análise espectral (FFT própria, correção de oitava, refinamento, harmonicidade) | ✅ testada com sinais sintéticos |
 | Build Android (APK release) no CI | ✅ |
 | Avaliação com 214 notas reais (NSynth) + 6 em teste de regressão no CI | ✅ 0 notas exibindo corda/oitava errada |
+| Troca de corda com a anterior soando, ruído (gravações reais misturadas) | ✅ testado; ⚠️ duas cordas em volume parecido ainda atrasam a troca |
 | Execução em aparelho Android / iOS | ⏳ não validado |
 
 ## Como executar
