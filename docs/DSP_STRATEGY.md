@@ -79,10 +79,74 @@ animação de confirmação.
   taxa de erros de oitava.
 - **Benchmark** de tempo por frame em Dart, para decidir sobre isolate/FFT.
 
+## Aprendizados das referências
+
+Código-fonte estudado (clonado via git, fora do repositório):
+
+- fgnass/tuner @ `b59d8b9` (MIT) — `src/lib/pitch.ts`, `src/lib/oneEuro.ts`,
+  `src/hooks/usePitch.ts`, `src/lib/notes.ts`, `src/hooks/useTuningSession.ts`.
+- PitchKit @ `26a7909` (Apache 2.0, sem arquivo NOTICE) —
+  `YinPitchDetector.kt`, `TunerEngine.kt`, `AudioCapture.kt`, `NoteMapper.kt`.
+
+### fgnass/tuner (referência principal — pipeline mais maduro)
+
+| Técnica | Parâmetros usados |
+| --- | --- |
+| Janela de captura | 8192 amostras (~186 ms a 44.1 kHz), detecção a cada 40 ms com overlap |
+| Filtros de entrada | high-pass em `0.7 × fmin`, low-pass em 5 kHz (mantém harmônicos) |
+| Captura | `echoCancellation`, `noiseSuppression` e `autoGainControl` **desligados** |
+| Noise gate | RMS < 0.004 → sem pitch |
+| YIN | janela de integração = metade do buffer, lag limitado a `[sr/fmax, sr/fmin]`, limiar 0.2; sem dip, aceita o mínimo global se < 0.6 |
+| Gate de confiança | só aceita clarity ≥ **0.9** (descarta o ataque não periódico da palhetada) |
+| Stability gate | últimas **5** detecções (~200 ms) dentro de **20 cents** |
+| Oitava (espectral) | se há picos proeminentes em `f0/2` **e** `1.5·f0`, desce uma oitava (YIN travou no 2º harmônico — comum no E2 em microfone de celular) |
+| Oitava (temporal) | "octave snap": salto de ~12 semitons (±1) em relação ao valor atual é dobrado de volta |
+| Refinamento | série harmônica no FFT (Hann), interpolação parabólica sub-bin + frequência instantânea por diferença de fase, média ponderada (A-weighting × magnitude) de `f_h / h` |
+| Smoothing | One Euro no domínio de cents, `minCutoff 0.6`, `beta 0.06`, `dt` real |
+| Nova nota | salto > 250 cents → reinicia o filtro (snap, sem deslizar) |
+| Hold | mantém a última leitura 700 ms após o sinal sumir |
+| Corda (histerese) | troca de corda só se a rival for melhor por ≥ 30 cents |
+| Afinado (histerese) | entra em ≤ 3 cents, sai em > 6 cents |
+
+### PitchKit (referência secundária — mais simples)
+
+- YIN clássico, limiar 0.15, sobre o buffer inteiro de 8192 (custo
+  O(N²/4) ≈ 16 M operações/frame, sem limitar o lag à faixa do instrumento).
+- Remoção de DC + high-pass de 1 polo com `α = 0.95`. A 44.1 kHz isso dá
+  corte de ~350 Hz, **atenuando E2–E4** — armadilha a evitar.
+- Gate RMS 0.01; suavização apenas por maioria do nome da nota (2 de 4
+  frames), sem suavizar cents.
+- Captura via `AudioRecord` (PCM16 mono, 44.1 kHz), leitura em thread de I/O,
+  `CONFLATED` (processa só o frame mais recente sob carga). Comenta que
+  `VOICE_RECOGNITION` tende a desligar AGC/supressão de ruído do sistema.
+
+### O que muda na proposta
+
+1. **Gate de confiança**: subir `TunerConfig.minConfidence` de 0.5 para ~0.9.
+2. **Stability gate**: 5 detecções / 20 cents como ponto de partida.
+3. **Histerese de corda** por margem em cents (30), não por contagem de frames.
+4. **Afinado com histerese** (entra 3 / sai 6 cents) em vez de ±5 fixo.
+5. **Sinal cru**: a implementação de `AudioInput` precisa desligar AGC, supressão
+   de ruído e cancelamento de eco (no Android, fonte `UNPROCESSED` ou
+   `VOICE_RECOGNITION`). Isso pesa na escolha entre plugin e código nativo.
+6. **Janela**: 4096–8192 amostras com detecção a cada ~40 ms (overlap), em vez
+   de 2048/1024. Lag do YIN sempre limitado à faixa do instrumento.
+7. **High-pass** de segunda ordem perto de `0.7 × 70 Hz`, nunca o 1 polo α=0.95.
+8. **Oitava**: começar com octave snap temporal + faixa restrita; adicionar a
+   verificação de sub-harmônico (f0/2 e 1.5·f0) junto do refinamento FFT,
+   pois ela depende do espectro.
+9. **Mediana** deixa de ser necessária se o stability gate + One Euro bastarem
+   — avaliar com gravações antes de adicionar.
+
+### Licenças
+
+Se algum trecho for portado de forma próxima (ex.: `refine()` do fgnass/tuner
+ou o One Euro), o arquivo Dart receberá comentário de origem e o aviso MIT
+será adicionado em `THIRD_PARTY_NOTICES.md`. Para PitchKit (Apache 2.0) vale o
+mesmo, indicando as alterações. A preferência continua sendo implementar a
+partir dos artigos, usando os projetos como referência de parâmetros.
+
 ## Referências
 
-- PitchKit (Apache 2.0) e fgnass/tuner (MIT): consultados apenas os READMEs
-  nesta fase — o acesso ao código-fonte via GitHub estava bloqueado no
-  ambiente cloud. Nenhum código foi copiado. Ver `THIRD_PARTY_NOTICES.md`.
 - de Cheveigné & Kawahara, *YIN*, JASA 2002.
 - Casiez, Roussel & Vogel, *1€ Filter*, CHI 2012.

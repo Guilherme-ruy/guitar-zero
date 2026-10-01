@@ -24,8 +24,8 @@ incluído no repositório.
 
 | Projeto | Licença | Uso |
 | --- | --- | --- |
-| [PitchKit](https://github.com/NicosNicolaou16/PitchKit) — Nicos Nicolaou | Apache 2.0 | Referência: YIN, high-pass/DC removal, energy gate, smoothing temporal |
-| [tuner](https://github.com/fgnass/tuner) — Felix Gnass | MIT | Referência: YIN + refinamento harmônico via FFT, stability gate, One Euro Filter no domínio de cents |
+| [PitchKit](https://github.com/NicosNicolaou16/PitchKit) @ `26a7909` — Nicos Nicolaou | Apache 2.0 | Referência: YIN, high-pass/DC removal, energy gate, smoothing temporal |
+| [tuner](https://github.com/fgnass/tuner) @ `b59d8b9` — Felix Gnass | MIT | Referência: YIN + refinamento harmônico via FFT, stability gate, One Euro Filter no domínio de cents |
 
 Artigos de referência:
 
