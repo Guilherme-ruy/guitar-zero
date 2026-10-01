@@ -1,5 +1,5 @@
 import '../dsp/filters/confidence_gate.dart';
-import '../dsp/filters/octave_jump_guard.dart';
+import '../dsp/filters/harmonic_jump_guard.dart';
 import '../dsp/filters/pitch_smoother.dart';
 import '../dsp/filters/range_gate.dart';
 import '../dsp/filters/stability_gate.dart';
@@ -17,7 +17,7 @@ import 'tuner_reading.dart';
 ///
 /// ```
 /// PitchEstimate?
-///   → ConfidenceGate → RangeGate → OctaveJumpGuard → StabilityGate
+///   → ConfidenceGate → RangeGate → HarmonicJumpGuard → StabilityGate
 ///   → PitchSmoother (One Euro em cents + reset em nova nota)
 ///   → StringTracker (histerese de corda)
 ///   → InTuneHysteresis
@@ -56,10 +56,12 @@ class TunerPipeline {
           minFrequencyHz: config.minFrequencyHz,
           maxFrequencyHz: config.maxFrequencyHz,
         ),
-        OctaveJumpGuard(
-          toleranceCents: config.octaveToleranceCents,
-          confirmDuration: config.octaveConfirmDuration,
-          memory: config.octaveMemory,
+        HarmonicJumpGuard(
+          toleranceCents: config.harmonicJumpToleranceCents,
+          confirmDuration: config.harmonicJumpConfirmDuration,
+          memory: config.harmonicJumpMemory,
+          onsetThresholdDb: config.onsetThresholdDb,
+          onsetWindow: config.onsetWindow,
         ),
         StabilityGate(
           windowSize: config.stabilityWindow,

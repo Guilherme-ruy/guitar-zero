@@ -11,9 +11,11 @@ class TunerConfig {
     this.minConfidence = 0.9,
     this.minFrequencyHz = 60,
     this.maxFrequencyHz = 450,
-    this.octaveToleranceCents = 50,
-    this.octaveConfirmDuration = const Duration(milliseconds: 600),
-    this.octaveMemory = const Duration(seconds: 2),
+    this.harmonicJumpToleranceCents = 50,
+    this.harmonicJumpConfirmDuration = const Duration(milliseconds: 600),
+    this.harmonicJumpMemory = const Duration(seconds: 2),
+    this.onsetThresholdDb = 3,
+    this.onsetWindow = const Duration(milliseconds: 250),
     this.stabilityWindow = 3,
     this.stabilityToleranceCents = 20,
     this.smoothingMinCutoffHz = 0.6,
@@ -41,19 +43,25 @@ class TunerConfig {
   final double minFrequencyHz;
   final double maxFrequencyHz;
 
-  // --- Proteção temporal de oitava --------------------------------------
+  // --- Proteção temporal contra saltos harmônicos (×2, ×3) ----------------
 
-  /// Distância máxima, em cents, de uma razão exata de 2:1 (ou 1:2) em
-  /// relação à referência para o salto ser tratado como erro de oitava.
-  final double octaveToleranceCents;
+  /// Distância máxima, em cents, de uma razão exata 2:1, 3:1 (ou inversas)
+  /// em relação à referência para o salto ser tratado como erro do detector.
+  final double harmonicJumpToleranceCents;
 
-  /// Por quanto tempo uma oitava diferente precisa persistir para ser aceita
-  /// como mudança real (ex.: harmônico na casa 12).
-  final Duration octaveConfirmDuration;
+  /// Por quanto tempo um salto harmônico **sem ataque** precisa persistir
+  /// para ser aceito como mudança real.
+  final Duration harmonicJumpConfirmDuration;
 
   /// Por quanto tempo a referência sobrevive sem estimativas (silêncio).
-  /// Depois disso, a próxima detecção é aceita sem histórico.
-  final Duration octaveMemory;
+  final Duration harmonicJumpMemory;
+
+  /// Aumento de RMS (dB) sobre o mínimo recente que caracteriza um ataque
+  /// (corda tocada de novo): salto harmônico com ataque é aceito na hora.
+  final double onsetThresholdDb;
+
+  /// Janela em que se procura o mínimo de RMS para detectar ataque.
+  final Duration onsetWindow;
 
   // --- Stability gate ---------------------------------------------------
 

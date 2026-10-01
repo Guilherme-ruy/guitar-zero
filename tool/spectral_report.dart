@@ -214,11 +214,13 @@ void main() {
           ),
           sr,
         );
-        eY = math.max(eY, centsBetween(yin.detect(sig)!.frequencyHz, f));
-        eR = math.max(eR, centsBetween(harmonic.detect(sig)!.frequencyHz, f));
+        final y = centsBetween(yin.detect(sig)!.frequencyHz, f);
+        final r = centsBetween(harmonic.detect(sig)!.frequencyHz, f);
+        if (y.abs() > eY.abs()) eY = y;
+        if (r.abs() > eR.abs()) eR = r;
       }
       stdout.writeln(
-        '   B=$b $sr/$n: YIN +${f2(eY, 1)}c, refinado +${f2(eR, 1)}c (pior corda)',
+        '   B=$b $sr/$n: YIN ${f2(eY)}c, refinado ${f2(eR)}c (pior corda)',
       );
     }
   }

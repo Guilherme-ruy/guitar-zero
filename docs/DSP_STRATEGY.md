@@ -96,7 +96,8 @@ Cada etapa é um `PitchDetector` ou `PitchFilter` independente e testável.
    (para baixo e para cima), refinamento harmônico e harmonicidade.
 5. **Gate de confiança** (`ConfidenceGate`): `periodicity < minConfidence` → sem pitch.
 6. **Gate de faixa** (`RangeGate`).
-7. **Proteção temporal de oitava** (`OctaveJumpGuard`); verificação espectral
+7. **Proteção temporal contra saltos harmônicos ×2/×3** (`HarmonicJumpGuard`,
+   com detecção de ataque — fase 4); verificação espectral
    de sub-harmônico fica para a fase com FFT.
 8. **Stability gate** (`StabilityGate`): N estimativas dentro de K cents.
 9. **One Euro em cents** (`PitchSmoother`), com reset em nova nota.
@@ -117,9 +118,10 @@ gate de harmonicidade.
 2. **Filtros temporais e histereses** — concluída.
 3. **Análise espectral**: FFT, correção de oitava, refinamento harmônico,
    harmonicidade — concluída.
-4. **Captura real** (`record`), DSP em isolate, build Android no CI —
-   concluída no código; **sem validação em aparelho**.
-5. Calibração dos parâmetros com áudio real.
+4. **Captura real** (`record`), DSP em isolate, build Android no CI e
+   **avaliação com gravações reais** (NSynth) — concluída; captura **sem
+   validação em aparelho**.
+5. Validação em aparelho e calibração com captura ao vivo.
 
 ## Resultados da fase 1 — YIN
 
@@ -248,7 +250,8 @@ Código: `lib/core/dsp/filters/` (filtros de pitch),
 PitchEstimate? + timestamp            (um por frame; null = sem pitch)
   → ConfidenceGate      confidence < 0.90 → null
   → RangeGate           fora de 60–450 Hz → null
-  → OctaveJumpGuard     ±1 oitava (±50 c) da referência → dobra de volta;
+  → HarmonicJumpGuard   (fase 4; antes OctaveJumpGuard) ×2/×3 da referência
+                        sem ataque → dobra de volta;
                         aceita a nova oitava se persistir 600 ms
   → StabilityGate       últimas N dentro de 20 c, senão null; null esvazia
   → PitchSmoother       One Euro em cents (0.6 Hz, β 0.06, dt real);
@@ -295,6 +298,9 @@ latência), a ser revisto com áudio real — fala real também passa pelo gate
 de confiança, que nestes testes foi contornado.
 
 ### Proteção temporal de oitava
+
+> Fase 4: generalizada para ×2 **e ×3**, com detecção de ataque
+> (`HarmonicJumpGuard`); ver [Avaliação com gravações reais](#avaliação-com-gravações-reais-fase-4).
 
 - Com uma referência estabelecida, estimativas a ±1200 ± 50 cents são
   dobradas para a oitava da referência. Testado: E2→E3 por 200 ms e D3→D2 por
@@ -598,6 +604,80 @@ não guarda histórico. Só soma o custo de CPU acima (~0.2–0.4 ms).
 - Diferença de fase e A-weighting não implementadas.
 - `HarmonicPitchDetector` ainda não está ligado ao app (`main.dart` usa o
   engine simulado até existir captura real).
+
+## Avaliação com gravações reais (fase 4)
+
+Sem acesso a aparelho, o DSP foi avaliado com **214 notas reais de
+guitarra/violão** do NSynth (`nsynth-test`, CC BY 4.0): 7 instrumentos (5
+acústicos, 2 elétricos), MIDI 38–66, 44 delas nas alturas das cordas
+soltas. Reamostradas para 44.1 kHz e processadas na configuração do app
+(frames de 4096, hop de 40 ms, `HarmonicPitchDetector` + `TunerPipeline`).
+Ferramenta: `tool/real_audio_eval.dart`. Seis notas viraram teste de
+regressão no CI (`test/core/real_audio_test.dart`, `test/fixtures/nsynth/`).
+
+Ressalvas: a nota nominal do NSynth não é verdade absoluta de afinação (as
+amostras têm desvios de até ±15 cents, e um instrumento, acoustic_030,
+desvia mais de 50 cents em vários arquivos); 16 kHz de origem limita os
+harmônicos a 8 kHz; amostras de biblioteca ≠ microfone de celular.
+
+### O que o áudio real revelou (e o que foi feito)
+
+| Achado | Causa | Correção |
+| --- | --- | --- |
+| Correção espectral **aumentou** os erros de oitava por frame (76 vs 35 do YIN) | regra "para cima" disparava em notas reais cujo H1 não virava pico (ex.: C3 → C4) | só considerar correção para cima quando 2f > 450 Hz — o único caso em que o YIN reporta sub-harmônico |
+| E2 exibindo **B3** no fim da nota | após ~3 s a fundamental morre antes do H3: YIN e espectro pegam ×3 (12ª) | `OctaveJumpGuard` → **`HarmonicJumpGuard`**: dobra saltos ×2 **e ×3** quando não há ataque (RMS < +3 dB sobre o mínimo dos últimos 250 ms) |
+| Leitura variando 8–14 c na sustentação em 2 instrumentos | **inarmonicidade real** (medido B até 3.5e-4): o pitch composto (YIN, média f_h/h) muda conforme os agudos decaem; YIN lia **+21.6 c** acima da fundamental no pior violão | refinamento passa a **ajustar f0 e B juntos** (mínimos quadrados ponderados em `(f_h/h)² = f0²(1+B·h²)`), estimando a fundamental (parcial 1) |
+| Notas curtas sem leitura | staccato de ~250 ms < 3 estimativas concordantes | nenhuma (comportamento correto) |
+| Aquisição de 0.6–0.9 s no violão mais inarmônico | periodicidade 0.6–0.89 e harmonicidade 0.5–0.7 no ataque, pitch saltando +40 → −6 c | nenhuma: o sinal é de fato instável; afrouxar o gate mostraria os saltos |
+
+Por que ×3 importa na afinação Standard: E2→B3 e A2→E4 são intervalos ×3
+(1900 cents). Só o ataque distingue "toquei a corda B3" de "o detector
+pegou o H3 do E2"; com ataque o salto é aceito na hora.
+
+### Resultados
+
+| Métrica (214 notas) | Antes das correções | Depois |
+| --- | --- | --- |
+| Frames com oitava errada — YIN isolado | 35 (0.23%) | 35 (0.23%) |
+| Frames com oitava errada — detector harmônico | 76 (0.49%) | 35 (0.23%) — caudas ×3, absorvidas pelo pipeline |
+| Notas que **exibiram** oitava/corda errada | 5 | **0** |
+| 1ª leitura (p50 / p90 / máx) | 173 / 253 / 1053 ms | igual |
+| Notas sem nenhuma leitura | 2 (staccatos) | 2 |
+
+Cordas soltas (44 notas), leitura exibida entre 0.3 e 2.5 s:
+
+| | Média f_h/h (antes) | Ajuste f0 + B (depois) |
+| --- | --- | --- |
+| p2p p50 / p90 / máx | 0.51 / 8.31 / 13.93 c | **0.26 / 4.98 / 7.91 c** |
+| desvio-padrão p50 / máx | 0.14 / 4.27 c | **0.09 / 2.14 c** |
+
+Inarmonicidade medida (notas graves, ajuste em janelas de 16384):
+
+| Instrumento | B (mediana) | YIN − fundamental ajustada |
+| --- | --- | --- |
+| acoustic_015 | 3.5e-4 | **+21.6 c** |
+| acoustic_014 | 5.4e-5 | +3.5 c |
+| electronic_028 | 3.2e-5 | +0.4 c |
+| acoustic_021 | 1.5e-5 | +0.5 c |
+| acoustic_010, electronic_022 | ~0 | ~0 c |
+
+Sintéticos com B conhecido: o ajuste erra < 0.05 c para B até 1e-3 (YIN:
++2.7 / +7.9 / +24 c para B = 1e-4 / 3e-4 / 1e-3). Custo: com ruído forte o
+ajuste tem mais variância que a média simples (pior caso 3.2 c vs 1.9 c em
+48 kHz/4096, ruído pico 0.2), ainda bem melhor que o YIN (8.4 c).
+
+**Decisão de produto embutida**: o afinador mostra a frequência da
+**fundamental** (parcial 1), como afinadores convencionais, e não o pitch
+composto. Em cordas muito inarmônicas isso difere do YIN em até ~20 c.
+
+### Limitações que continuam
+
+- Captura ao vivo não validada (latência real, `VOICE_RECOGNITION` em
+  aparelhos, ruído de ambiente, microfone de celular).
+- Fala: sem dados reais; glissandos harmônicos lentos passam pelo gate.
+- `HarmonicJumpGuard` depende de RMS: uma corda tocada muito fraca enquanto
+  outra ainda soa alto pode não gerar "ataque"; nesse caso a nota nova só
+  aparece após 600 ms.
 
 ## Tolerância de afinado
 

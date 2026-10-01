@@ -40,8 +40,9 @@ Grandke (1983) para janela Hann; correção de oitava com regra própria
 correção para cima por ausência de harmônicos ímpares); harmonicidade
 própria (energia explicada × completude). Do fgnass/tuner vieram as ideias
 de verificar sub-harmônicos no espectro, medir proeminência contra a
-mediana da vizinhança (fator 12) e refinar a fundamental pela média
-ponderada de `f_h / h` — sem cópia de código. Nenhuma dependência nova.
+mediana da vizinhança (fator 12) e refinar a fundamental pelos harmônicos —
+sem cópia de código. O ajuste conjunto de f0 e inarmonicidade usa o modelo
+clássico de corda rígida `f_h = h·f0·√(1 + B·h²)` (Fletcher, 1964).
 
 | Projeto | Licença | Uso |
 | --- | --- | --- |
@@ -54,8 +55,19 @@ Artigos de referência:
   speech and music*. JASA, 2002. https://doi.org/10.1121/1.1458024
 - G. Casiez, N. Roussel, D. Vogel. *1€ Filter*. CHI 2012.
   https://gery.casiez.net/1euro/
+- H. Fletcher. *Normal Vibration Frequencies of a Stiff Piano String*.
+  JASA 36(1), 1964.
 - D. Grandke. *Interpolation Algorithms for Discrete Fourier Transforms of
   Weighted Signals*. IEEE Trans. Instrum. Meas. 32(2), 1983.
+
+## Dados de teste
+
+| Dados | Licença | Uso |
+| --- | --- | --- |
+| [The NSynth Dataset](https://magenta.tensorflow.org/datasets/nsynth) (Google Inc.) — 6 notas de `nsynth-test` em `test/fixtures/nsynth/` | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | Testes de regressão com áudio real. Alterações: reamostragem 16 → 44.1 kHz e corte em 3.5 s. Detalhes em `test/fixtures/nsynth/README.md`. Os arquivos não são incluídos no app. |
+
+A avaliação completa (214 notas) usa o conjunto baixado localmente, fora do
+repositório (`tool/real_audio_eval.dart`).
 
 ## Dependências de pacotes
 

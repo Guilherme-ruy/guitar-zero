@@ -19,7 +19,7 @@ PitchDetector                     lib/core/dsp/
   HarmonicPitchDetector             YIN (semente) + HarmonicAnalyzer (FFT,
                                     oitava, refinamento, harmonicidade)
 TunerPipeline                     lib/core/tuner/          síncrono, sem áudio:
-  PitchFilter (cadeia)            lib/core/dsp/filters/    gates, oitava, estabilidade, One Euro
+  PitchFilter (cadeia)            lib/core/dsp/filters/    gates, saltos ×2/×3, estabilidade, One Euro
   StringTracker                   lib/core/music/          corda com histerese
   InTuneHysteresis, SilenceHold   lib/core/tuner/          afinado e hold
 ```

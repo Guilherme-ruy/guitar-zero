@@ -10,6 +10,7 @@ class HarmonicAnalyzerConfig {
     this.maxHarmonics = 12,
     this.maxAnalysisHz = 5000,
     this.minFundamentalHz = 60,
+    this.maxFundamentalHz = 450,
     this.searchToleranceFraction = 0.03,
     this.frequencyToleranceCents = 40,
     this.prominenceRatio = 12,
@@ -28,6 +29,11 @@ class HarmonicAnalyzerConfig {
 
   /// Uma correção para baixo nunca produz fundamental abaixo disto.
   final double minFundamentalHz;
+
+  /// Limite superior da faixa do detector. A correção para cima só é
+  /// considerada quando 2·semente passa deste limite: dentro da faixa, se o
+  /// YIN escolheu f e não 2f, é porque não há periodicidade em 2f.
+  final double maxFundamentalHz;
 
   /// Meia-largura da busca por pico em torno de h·f0, como fração de h·f0
   /// (cobre inarmonicidade); no mínimo 2 bins.
@@ -79,6 +85,7 @@ class HarmonicAnalysis {
     required this.correction,
     required this.harmonicity,
     required this.refinedHz,
+    required this.inharmonicity,
     required this.harmonicsFound,
     required this.lowerOddEnergyRatio,
   });
@@ -93,9 +100,14 @@ class HarmonicAnalysis {
   /// a 1: energia explicada pelos harmônicos × completude da série.
   final double harmonicity;
 
-  /// Fundamental estimada pela média ponderada de `f_h / h` dos harmônicos
-  /// encontrados, ou `null` se nenhum foi encontrado.
+  /// Fundamental (parcial 1) estimada pelos harmônicos encontrados, com
+  /// ajuste de inarmonicidade (ver `_refine`), ou `null` se nenhum foi
+  /// encontrado.
   final double? refinedHz;
+
+  /// Coeficiente B estimado (`f_h = h·f0·√(1 + B·h²)`); 0 quando não
+  /// ajustado.
+  final double inharmonicity;
 
   /// Quantos harmônicos de [fundamentalHz] foram encontrados como picos.
   final int harmonicsFound;
@@ -115,11 +127,13 @@ class HarmonicAnalysis {
 ///    energia harmônica de f/2. Exigir o pico em f/2 evita falsos positivos
 ///    por ressonância de outras cordas, que produzem componentes em 1.5·f
 ///    (quintas/quartas) mas nunca uma oitava abaixo da corda mais grave.
-/// 2. **Correção para cima** (sub-harmônico): se a semente não tem pico na
-///    própria frequência nem em nenhum harmônico ímpar, mas tem em 2·f, o
-///    sinal é melhor explicado por 2·f.
+/// 2. **Correção para cima** (sub-harmônico): só quando 2·f está acima da
+///    faixa (o único caso em que o YIN reporta sub-harmônico); se a semente
+///    não tem pico na própria frequência nem em nenhum harmônico ímpar, mas
+///    tem em 2·f, o sinal é melhor explicado por 2·f.
 /// 3. **Harmonicidade** da fundamental escolhida.
-/// 4. **Refinamento** por média ponderada (amplitude) de `f_h / h`.
+/// 4. **Refinamento**: fundamental e inarmonicidade ajustadas aos picos
+///    harmônicos (mínimos quadrados ponderados pela amplitude).
 ///
 /// Sem estado entre frames. Implementação própria; ideias de verificação de
 /// sub-harmônico e proeminência por mediana inspiradas no fgnass/tuner
@@ -165,7 +179,8 @@ class HarmonicAnalyzer {
         correction = OctaveCorrection.down;
       }
     }
-    if (correction == OctaveCorrection.none) {
+    if (correction == OctaveCorrection.none &&
+        2 * seedHz > config.maxFundamentalHz) {
       final own = _oddEvidence(seedHz);
       if (own.oddPeaks == 0 && _peakNear(2 * seedHz) != null) {
         fundamental = 2 * seedHz;
@@ -179,6 +194,7 @@ class HarmonicAnalyzer {
       correction: correction,
       harmonicity: _harmonicity(fundamental),
       refinedHz: refinement.hz,
+      inharmonicity: refinement.inharmonicity,
       harmonicsFound: refinement.count,
       lowerOddEnergyRatio: lowerOddRatio,
     );
@@ -288,18 +304,78 @@ class HarmonicAnalyzer {
     return (explained / total * present / highest).clamp(0.0, 1.0);
   }
 
-  ({double? hz, int count}) _refine(double f0) {
-    var weighted = 0.0;
-    var weights = 0.0;
-    var count = 0;
+  /// Estima a fundamental pela série harmônica, considerando a
+  /// inarmonicidade de cordas reais: ajusta por mínimos quadrados ponderados
+  /// (amplitude) `(f_h/h)² = f0² + f0²·B·h²`, i.e. `f_h = h·f0·√(1 + B·h²)`.
+  ///
+  /// O resultado é a frequência da **fundamental** (parcial 1), sem o viés
+  /// para cima que parciais esticados causam na média simples de `f_h / h`
+  /// e no YIN. Com menos de [minHarmonicsForFit] harmônicos, ou B fora de
+  /// [0, [maxPlausibleInharmonicity]] (ruído), usa a média ponderada de
+  /// `f_h / h` (B = 0).
+  ({double? hz, int count, double inharmonicity}) _refine(double f0) {
+    final orders = <int>[];
+    final freqs = <double>[];
+    final weights = <double>[];
     for (var h = 1; h <= config.maxHarmonics && h * f0 <= _limitHz; h++) {
       final peak = _peakNear(h * f0);
       if (peak == null) continue;
-      final w = math.sqrt(_spectrum.power(peak.bin));
-      weighted += w * peak.hz / h;
-      weights += w;
-      count++;
+      orders.add(h);
+      freqs.add(peak.hz);
+      weights.add(math.sqrt(_spectrum.power(peak.bin)));
     }
-    return (hz: weights > 0 ? weighted / weights : null, count: count);
+    if (orders.isEmpty) return (hz: null, count: 0, inharmonicity: 0.0);
+
+    var sw = 0.0;
+    var meanRatio = 0.0;
+    for (var i = 0; i < orders.length; i++) {
+      sw += weights[i];
+      meanRatio += weights[i] * freqs[i] / orders[i];
+    }
+    meanRatio /= sw;
+    if (orders.length < minHarmonicsForFit) {
+      return (hz: meanRatio, count: orders.length, inharmonicity: 0.0);
+    }
+
+    // Regressão linear ponderada de y = (f_h/h)² em x = h².
+    var mx = 0.0;
+    var my = 0.0;
+    for (var i = 0; i < orders.length; i++) {
+      final x = (orders[i] * orders[i]).toDouble();
+      final y = math.pow(freqs[i] / orders[i], 2).toDouble();
+      mx += weights[i] * x;
+      my += weights[i] * y;
+    }
+    mx /= sw;
+    my /= sw;
+    var sxy = 0.0;
+    var sxx = 0.0;
+    for (var i = 0; i < orders.length; i++) {
+      final dx = (orders[i] * orders[i]) - mx;
+      sxy += weights[i] * dx * (math.pow(freqs[i] / orders[i], 2) - my);
+      sxx += weights[i] * dx * dx;
+    }
+    if (sxx == 0) {
+      return (hz: meanRatio, count: orders.length, inharmonicity: 0.0);
+    }
+    final slope = sxy / sxx;
+    final intercept = my - slope * mx;
+    if (slope < 0 ||
+        intercept <= 0 ||
+        slope / intercept > maxPlausibleInharmonicity) {
+      return (hz: meanRatio, count: orders.length, inharmonicity: 0.0);
+    }
+    return (
+      hz: math.sqrt(intercept),
+      count: orders.length,
+      inharmonicity: slope / intercept,
+    );
   }
+
+  /// Mínimo de harmônicos encontrados para ajustar f0 e B juntos.
+  static const int minHarmonicsForFit = 3;
+
+  /// B acima disto é tratado como ajuste espúrio (ruído) e descartado. Maior
+  /// valor medido em gravações reais: 3.5e-4.
+  static const double maxPlausibleInharmonicity = 2e-3;
 }

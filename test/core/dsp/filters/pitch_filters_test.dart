@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guitar_zero/core/dsp/filters/confidence_gate.dart';
-import 'package:guitar_zero/core/dsp/filters/octave_jump_guard.dart';
+import 'package:guitar_zero/core/dsp/filters/harmonic_jump_guard.dart';
 import 'package:guitar_zero/core/dsp/filters/pitch_smoother.dart';
 import 'package:guitar_zero/core/dsp/filters/range_gate.dart';
 import 'package:guitar_zero/core/dsp/filters/stability_gate.dart';
@@ -35,11 +35,13 @@ void main() {
     });
   });
 
-  group('OctaveJumpGuard', () {
-    OctaveJumpGuard newGuard() => OctaveJumpGuard(
+  group('HarmonicJumpGuard: oitava', () {
+    HarmonicJumpGuard newGuard() => HarmonicJumpGuard(
       toleranceCents: 50,
       confirmDuration: ms(600),
       memory: ms(2000),
+      onsetThresholdDb: 3,
+      onsetWindow: ms(250),
     );
     const e2 = 82.41;
 
@@ -82,17 +84,18 @@ void main() {
       }
     });
 
-    test('intervalos que não são oitava passam intactos (cordas vizinhas)', () {
+    test('intervalos não harmônicos passam intactos (cordas vizinhas)', () {
       final g = newGuard()..process(est(e2), Duration.zero);
-      // D3 está a 1000 cents de E2; B3 a 1900; E4 a 2400 (2 oitavas).
-      for (final hz in [146.83, 246.94, 329.63]) {
+      // A2 +500, D3 +1000, G3 +1500 cents de E2; E4 a 2400 (×4, não
+      // tratado). B3 (+1900 ≈ ×3) é coberto no grupo de ×3.
+      for (final hz in [110.0, 146.83, 196.0, 329.63]) {
         g.reset();
         g.process(est(e2), Duration.zero);
         expect(g.process(est(hz), ms(40))!.frequencyHz, hz);
       }
     });
 
-    test('fora da tolerância (oitava ± 60 cents) não é dobrada', () {
+    test('fora da tolerância (oitava + 60 cents) não é dobrada', () {
       final g = newGuard()..process(est(e2), Duration.zero);
       const hz = e2 * 2 * 1.0353; // +60 cents
       expect(g.process(est(hz), ms(40))!.frequencyHz, hz);
@@ -107,6 +110,66 @@ void main() {
       final g = newGuard()..process(est(e2), Duration.zero);
       expect(g.process(null, ms(1000)), isNull);
       expect(g.process(est(e2 * 2), ms(2100))!.frequencyHz, e2 * 2);
+    });
+  });
+
+  group('HarmonicJumpGuard: ×3 e ataque', () {
+    HarmonicJumpGuard newGuard() => HarmonicJumpGuard(
+      toleranceCents: 50,
+      confirmDuration: ms(600),
+      memory: ms(2000),
+      onsetThresholdDb: 3,
+      onsetWindow: ms(250),
+    );
+    const e2 = 82.41;
+    PitchEstimate withRms(double hz, double rms) =>
+        PitchEstimate(frequencyHz: hz, periodicity: 0.97, rms: rms);
+
+    test('cauda da nota: H3 sem ataque é dobrado de volta para E2', () {
+      final g = newGuard();
+      var rms = 0.3;
+      for (var t = 0; t < 2000; t += 40) {
+        g.process(withRms(e2, rms), ms(t));
+        rms *= 0.98; // decaindo
+      }
+      for (var t = 2000; t < 2400; t += 40) {
+        final out = g.process(withRms(e2 * 3, rms), ms(t));
+        expect(out!.frequencyHz, closeTo(e2, 1e-9));
+        rms *= 0.95;
+      }
+    });
+
+    test('B3 tocada depois de E2 (com ataque) é aceita na hora', () {
+      final g = newGuard();
+      for (var t = 0; t < 1000; t += 40) {
+        g.process(withRms(e2, 0.1 * (1 - t / 2000)), ms(t));
+      }
+      final b3 = g.process(withRms(246.94, 0.2), ms(1000));
+      expect(b3!.frequencyHz, 246.94);
+    });
+
+    test('ataque detectado mesmo se o salto de pitch vier frames depois', () {
+      final g = newGuard();
+      for (var t = 0; t < 1000; t += 40) {
+        g.process(withRms(e2, 0.05), ms(t));
+      }
+      // O ataque eleva o RMS, mas o detector ainda vê E2 por 2 frames.
+      g
+        ..process(withRms(e2, 0.2), ms(1000))
+        ..process(withRms(e2, 0.25), ms(1040));
+      final b3 = g.process(withRms(246.94, 0.25), ms(1080));
+      expect(b3!.frequencyHz, 246.94);
+    });
+
+    test('caminho inverso (÷3) sem ataque é dobrado', () {
+      final g = newGuard()..process(withRms(246.94, 0.1), Duration.zero);
+      final out = g.process(withRms(246.94 / 3, 0.09), ms(40));
+      expect(out!.frequencyHz, closeTo(246.94, 1e-9));
+    });
+
+    test('sem RMS (estimativas sintéticas) nunca há ataque: ×3 é dobrado', () {
+      final g = newGuard()..process(est(e2), Duration.zero);
+      expect(g.process(est(e2 * 3), ms(40))!.frequencyHz, closeTo(e2, 1e-9));
     });
   });
 

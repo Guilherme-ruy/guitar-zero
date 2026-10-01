@@ -126,6 +126,17 @@ void main() {
       }
     });
 
+    test(
+      'dentro da faixa nunca corrige para cima (YIN já teria achado 2f)',
+      () {
+        // C3 real (NSynth) teve H1 não detectado como pico: a regra antiga
+        // dobrava para C4. Equivalente sintético: só harmônicos pares visíveis.
+        final f = strings[2].targetFrequency; // D3: 2f = 293 Hz < 450
+        final a = analyzer.analyze(toneFrame(2 * f, [1, 0.5]), f)!;
+        expect(a.correction, OctaveCorrection.none);
+      },
+    );
+
     test('fundamental ausente com H3 presente não é tratada como '
         'sub-harmônico', () {
       final f0 = strings[2].targetFrequency;

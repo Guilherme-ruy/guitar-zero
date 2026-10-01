@@ -104,21 +104,28 @@ void main() {
       }
     });
 
-    test('inarmonicidade (B = 1e-4): ambos ficam sustenidos; refinado mais '
-        'perto da fundamental', () {
-      for (final s in strings) {
-        final f = s.targetFrequency;
-        final frame = toneFrame(
-          f,
-          48000,
-          8192,
-          harmonics: const [1, .7, .5, .4, .3, .25, .2, .15, .1, .08],
-          inharmonicity: 1e-4,
-        );
-        final y = centsBetween(yin.detect(frame)!.frequencyHz, f);
-        final r = centsBetween(detector.detect(frame)!.frequencyHz, f);
-        expect(r, greaterThan(0));
-        expect(r, lessThan(y));
+    test('inarmonicidade (cordas reais): YIN fica sustenido; o ajuste '
+        'conjunto de f0 e B recupera a fundamental', () {
+      for (final b in [1e-4, 3.5e-4, 1e-3]) {
+        for (final s in strings) {
+          final f = s.targetFrequency;
+          final frame = toneFrame(
+            f,
+            48000,
+            8192,
+            harmonics: const [1, .7, .5, .4, .3, .25, .2, .15, .1, .08],
+            inharmonicity: b,
+          );
+          final y = centsBetween(yin.detect(frame)!.frequencyHz, f);
+          final r = centsBetween(detector.detect(frame)!.frequencyHz, f);
+          expect(y, greaterThan(2), reason: 'B=$b ${s.note}');
+          expect(r.abs(), lessThan(0.5), reason: 'B=$b ${s.note}');
+          expect(
+            detector.lastAnalysis!.inharmonicity,
+            closeTo(b, b * 0.1),
+            reason: 'B estimado, ${s.note}',
+          );
+        }
       }
     });
 
