@@ -50,9 +50,9 @@ Detalhes em [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Como o processamento vai funcionar
 
-Captura PCM mono → noise gate → **YIN** → restrição de faixa → stability gate →
-proteção contra oitava → mediana → **One Euro Filter** em cents → corda mais
-provável com histerese → leitura para a UI.
+Captura PCM mono → remoção de DC + RMS gate → **YIN** → gate de confiança →
+faixa → proteção temporal de oitava → stability gate → **One Euro** em cents →
+corda com histerese → afinado com histerese → hold de silêncio → UI.
 
 Estratégia, fases e resultados medidos em
 [docs/DSP_STRATEGY.md](docs/DSP_STRATEGY.md).
@@ -62,6 +62,7 @@ Ferramentas (fora do CI):
 ```bash
 dart run tool/yin_report.dart      # caracterização com sinais sintéticos
 dart run tool/yin_benchmark.dart   # custo por frame
+dart run tool/temporal_report.dart # pipeline temporal: janela 3 vs 5, beta
 ```
 
 ## Situação atual
@@ -75,8 +76,8 @@ dart run tool/yin_benchmark.dart   # custo por frame
 | Tela do afinador (estrutural) | ✅ rodando com engine simulado (selo **DEMO**) |
 | Captura de microfone real | ⏳ não implementado |
 | Detector YIN em Dart puro (`YinPitchDetector`) | ✅ testado com sinais sintéticos |
-| Filtros temporais (stability gate, One Euro, octave snap) | ⏳ próximas fases |
-| Correção de erros de oitava | ⏳ limitação documentada |
+| Pipeline temporal (gates, octave guard, stability gate, One Euro, histereses, hold) | ✅ testado com sequências sintéticas |
+| Correção espectral de erros de oitava | ⏳ limitação documentada |
 | Execução em aparelho Android / iOS | ⏳ não validado |
 
 ## Como executar

@@ -1,8 +1,9 @@
 # Estratégia de DSP
 
-> Status: **aprovada com ajustes** (faixa 60–450 Hz; frameSize, stability gate
-> e minConfidence configuráveis). Implementação em fases — ver
-> [Fases](#fases) e [Resultados da fase 1 — YIN](#resultados-da-fase-1--yin).
+> Status: **aprovada com ajustes**. Fase 1 (YIN) e fase 2 (filtros temporais)
+> implementadas e validadas com sinais sintéticos — ver [Fases](#fases),
+> [Resultados da fase 1](#resultados-da-fase-1--yin) e
+> [Resultados da fase 2](#resultados-da-fase-2--pipeline-temporal).
 
 ## Objetivo
 
@@ -76,24 +77,31 @@ Cada etapa é um `PitchDetector` ou `PitchFilter` independente e testável.
    → interpolação parabólica → `f = sr/τ`, `confidence = 1 − d'(τ)`.
 4. **Restrição de faixa** (detector): lag limitado a `[sr/fmax, sr/fmin]`;
    mínimo encostado na borda da faixa não é aceito.
-5. **Gate de confiança** (engine): `confidence < minConfidence` → sem pitch.
-6. **Stability gate** (filtro): N detecções consecutivas dentro de K cents.
-7. **Proteção contra oitava**: octave snap temporal; depois, verificação de
-   sub-harmônico junto do refinamento FFT.
-8. **One Euro Filter em cents** (filtro), com reset em salto de nota.
-9. **Hold no silêncio** (filtro).
-10. **Histerese de corda e de afinado** (engine/matcher).
+5. **Gate de confiança** (`ConfidenceGate`): `confidence < minConfidence` → sem pitch.
+6. **Gate de faixa** (`RangeGate`).
+7. **Proteção temporal de oitava** (`OctaveJumpGuard`); verificação espectral
+   de sub-harmônico fica para a fase com FFT.
+8. **Stability gate** (`StabilityGate`): N estimativas dentro de K cents.
+9. **One Euro em cents** (`PitchSmoother`), com reset em nova nota.
+10. **Histerese de corda** (`StringTracker`) e **de afinado**
+    (`InTuneHysteresis`).
+11. **Hold no silêncio** (`SilenceHold`).
+
+Etapas 5–11 ficam no `TunerPipeline` (fase 2). Detalhes em
+[Resultados da fase 2](#resultados-da-fase-2--pipeline-temporal).
 
 Etapas avançadas, só se os testes mostrarem necessidade: refinamento harmônico
 via FFT, A-weighting, high-pass de 2ª ordem, mediana.
 
 ## Fases
 
-1. **YIN em Dart puro + testes sintéticos** — esta fase.
-2. Captura real (`AudioInput`) e gravações de referência.
-3. Filtros temporais: stability gate, octave snap, One Euro, hold.
-4. Histereses de corda/afinado.
-5. Refinamento harmônico (FFT) se os erros de oitava em aparelho exigirem.
+1. **YIN em Dart puro + testes sintéticos** — concluída.
+2. **Filtros temporais e histereses** (gates, octave guard temporal,
+   stability gate, One Euro, nova nota, corda, afinado, hold) — concluída.
+3. Captura real (`AudioInput`), isolate e gravações de referência.
+4. Calibração dos parâmetros com áudio real.
+5. Refinamento harmônico / correção espectral de oitava (FFT), se os erros
+   em aparelho exigirem.
 
 ## Resultados da fase 1 — YIN
 
@@ -210,10 +218,135 @@ para depois, só se necessário.
 - Erros de oitava descritos acima não corrigidos.
 - Benchmark num servidor x86, não em ARM.
 
+## Resultados da fase 2 — pipeline temporal
+
+Código: `lib/core/dsp/filters/` (filtros de pitch),
+`lib/core/music/string_tracker.dart`, `lib/core/tuner/` (`TunerPipeline`,
+`InTuneHysteresis`, `SilenceHold`). Testes: `test/core/dsp/filters/`,
+`test/core/tuner/`, `test/core/music/string_tracker_test.dart`. Relatório:
+`dart run tool/temporal_report.dart`.
+
+### Desenho
+
+```
+PitchEstimate? + timestamp            (um por frame; null = sem pitch)
+  → ConfidenceGate      confidence < 0.90 → null
+  → RangeGate           fora de 60–450 Hz → null
+  → OctaveJumpGuard     ±1 oitava (±50 c) da referência → dobra de volta;
+                        aceita a nova oitava se persistir 600 ms
+  → StabilityGate       últimas N dentro de 20 c, senão null; null esvazia
+  → PitchSmoother       One Euro em cents (0.6 Hz, β 0.06, dt real);
+                        reinicia em salto > 250 c ou lacuna > 300 ms
+  → StringTracker       troca de corda só com 30 c de vantagem
+  → InTuneHysteresis    entra ≤ 3 c, sai > 6 c; reinicia ao trocar corda
+  → SilenceHold         mantém a última leitura 700 ms (isHeld = true)
+TunerReading?                          (o que a UI recebe)
+```
+
+`TunerPipeline` é síncrono e não conhece áudio. `PitchTunerEngine` só faz
+`AudioInput → YIN → TunerPipeline → stream`. A UI recebe apenas
+`TunerReading` (corda, cents, afinado, isHeld) e não conhece YIN, filtros nem
+histereses. Todos os parâmetros estão em `TunerConfig`. Os filtros usam os
+timestamps dos frames (`AudioFrame.timestamp`), nunca contagem de frames.
+
+Implementações próprias: One Euro a partir do paper (Casiez et al., 2012);
+gate de estabilidade, octave snap, histereses e hold a partir das ideias e
+valores iniciais do fgnass/tuner (nenhum código copiado).
+
+### Stability gate: janela 3 vs 5 (hop 40 ms)
+
+| Medida | Janela 3 | Janela 5 |
+| --- | --- | --- |
+| Aquisição (após a 1ª estimativa) | **80 ms** | 160 ms |
+| Aquisição total ≈ janela de análise + aquisição (4096 @ 48 kHz = 85 ms) | ~165 ms | ~245 ms |
+| Outlier único: tempo congelado (hold, nada errado na tela) | 120 ms | 200 ms |
+| Tarraxa 20–100 c/s: leituras vivas | 100% | 100% |
+| Tarraxa 200 c/s | 100% (16/16) | **19% (3/16)** — congela |
+| Tarraxa 400 c/s | 2/9 | 2/9 |
+| Frequências aleatórias (ruído), 2000 frames | 3 aceitos | 0 |
+| Glissando tipo fala até 150 c/s | 99.9% aceito | 85.6% |
+| Glissando até 300 c/s | 82.6% | 43.0% |
+| Glissando até 600 c/s | 50.1% | 25.7% |
+
+O gate mede só a dispersão na janela (máx − mín ≤ 20 c), então a velocidade
+máxima que ele deixa passar é ~20 c / ((N−1)·40 ms): ~250 c/s com N = 3 e
+~125 c/s com N = 5.
+
+**Tradeoff**: N = 3 cumpre a meta de latência e acompanha giros rápidos, mas
+rejeita fala bem menos. N = 5 rejeita melhor fala e ruído, mas passa de
+150 ms e congela em giros rápidos. **Padrão provisório: 3** (pela meta de
+latência), a ser revisto com áudio real — fala real também passa pelo gate
+de confiança, que nestes testes foi contornado.
+
+### Proteção temporal de oitava
+
+- Com uma referência estabelecida, estimativas a ±1200 ± 50 cents são
+  dobradas para a oitava da referência. Testado: E2→E3 por 200 ms e D3→D2 por
+  200 ms (caminho inverso) não alteram a leitura; YIN alternando entre
+  oitavas a cada frame nunca troca a oitava exibida.
+- Se a outra oitava persistir por 600 ms contínuos (harmônico na casa 12,
+  afinação alternativa), é aceita como real. Uma única estimativa na oitava
+  da referência cancela a confirmação.
+- Saltos de 2 oitavas (E2↔E4) e intervalos entre cordas (500/1000/1400/1900
+  cents) nunca são dobrados.
+- A referência expira após 2 s sem estimativas.
+- **Limitações**: (1) a primeira detecção sem histórico (após silêncio > 2 s)
+  não é corrigida — se o YIN começar na oitava errada, ela é exibida;
+  (2) um erro de oitava que persista > 600 ms também é aceito. Ambos dependem
+  da correção espectral (fase 5).
+
+### One Euro (cents)
+
+| Medida | Resultado |
+| --- | --- |
+| Nota estável | exata (0.00 c) |
+| Jitter ±1 / ±3 / ±10 c | p2p da saída 1.0 / 3.5 / 14.0 c (entrada 2 / 6 / 20), viés < 0.05 c |
+| Rampa 20 c/s | atraso médio 1.0 c |
+| Rampa 100 c/s | atraso médio 1.9 c |
+| Rampa 200 c/s | atraso médio 2.6 c |
+| Salto > 250 c (nova nota) | primeira leitura já no valor real (sem deslizar) |
+
+Efeito de beta (jitter ±3 c vs atraso no fim de uma rampa de 100 c/s):
+
+| beta | p2p com jitter ±3 | atraso |
+| --- | --- | --- |
+| 0 | 2.3 c | 26.1 c |
+| 0.02 | 3.0 c | 3.6 c |
+| **0.06** (padrão) | 3.5 c | 1.7 c |
+| 0.15 | 4.0 c | 0.8 c |
+
+Com β = 0.06 o filtro privilegia responsividade: a atenuação de jitter é
+modesta (~40%). Se o ponteiro tremer com áudio real, reduzir `minCutoff` ou
+`beta` é o primeiro ajuste.
+
+### Histereses e hold
+
+- **Corda**: entre E2 e A2 (ponto médio +250 c), vindo de E2 só troca em
+  ≥ +265 c; vindo de A2 só volta em ≤ +235 c. Oscilação entre 240 e 262 c
+  não pisca. Após o hold expirar, a histerese é zerada.
+- **Afinado**: entra com |c| ≤ 3 e sai com |c| > 6. Leituras oscilando entre
+  2.8 e 3.4, ou entre +1 e +5.5, não piscam. Rampa de −40 a +10 c: exatamente
+  2 transições (entra perto de −3, sai acima de +6). Com jitter de ±10 c em
+  torno de 0 há trocas (o próprio sinal cruza ±6); isso só se resolve com
+  smoothing mais forte.
+- **Hold**: 700 ms medidos por timestamp. Leitura nova durante o hold
+  substitui na hora (sem passar por "toque uma corda"). Durante uma troca de
+  corda, a tela mantém a corda anterior até a nova ser adquirida.
+
+### Limitações desta fase
+
+- Tudo validado com sequências sintéticas de `PitchEstimate`, mais um teste
+  de ponta a ponta com YIN e áudio sintético. Nenhum áudio real.
+- Fala com glissandos lentos passa pelo stability gate.
+- Erros de oitava sem histórico ou persistentes (ver acima).
+- Durante o hold o engine emite a leitura com `isHeld = true`; a UI ainda
+  não diferencia visualmente esse estado.
+- Parâmetros (janela, β, minCutoff, tolerâncias) são provisórios.
+
 ## Tolerância de afinado
 
-Inicial: ±5 cents (`TunerConfig.inTuneToleranceCents`); depois, histerese
-entra 3 / sai 6 cents (ver aprendizados abaixo). Calibrar com uso real;
+Implementada como histerese: entra com |cents| ≤ 3, sai com |cents| > 6
+(`TunerConfig.inTuneEnterCents/inTuneLeaveCents`). Calibrar com uso real. Calibrar com uso real;
 considerar exigir permanência por ~200 ms dentro da tolerância antes da
 animação de confirmação.
 

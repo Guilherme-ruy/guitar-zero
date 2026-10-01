@@ -19,7 +19,12 @@ class FakeAudioInput implements AudioInput {
   Stream<AudioFrame> get frames => _frames.stream;
 
   void emit([AudioFrame? frame]) => _frames.add(
-    frame ?? AudioFrame(samples: Float32List(1024), sampleRate: 48000),
+    frame ??
+        AudioFrame(
+          samples: Float32List(1024),
+          sampleRate: 48000,
+          timestamp: Duration.zero,
+        ),
   );
 
   @override

@@ -85,7 +85,7 @@ class SimulatedTunerEngine implements TunerEngine {
         confidence: 0.95,
         string: string,
         cents: cents,
-        isInTune: cents.abs() <= config.inTuneToleranceCents,
+        isInTune: cents.abs() <= config.inTuneEnterCents,
       ),
     );
   }

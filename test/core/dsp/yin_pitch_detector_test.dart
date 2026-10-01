@@ -162,6 +162,7 @@ void main() {
           final frame = AudioFrame(
             samples: Float32List(frameSize),
             sampleRate: sampleRate,
+            timestamp: Duration.zero,
           );
           expect(detector.detect(frame), isNull);
         });
@@ -330,7 +331,11 @@ void main() {
 
   group('contrato', () {
     test('frame menor que o mínimo lança ArgumentError', () {
-      final frame = AudioFrame(samples: Float32List(1601), sampleRate: 48000);
+      final frame = AudioFrame(
+        samples: Float32List(1601),
+        sampleRate: 48000,
+        timestamp: Duration.zero,
+      );
       expect(() => detector.detect(frame), throwsArgumentError);
     });
 

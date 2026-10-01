@@ -6,13 +6,15 @@
 UI (widgets)                      lib/features/tuner/widgets, tuner_screen.dart
    ↓ lê estado
 TunerController (ChangeNotifier)  lib/features/tuner/tuner_controller.dart
-   ↓ depende só da interface
+   ↓ depende só da interface; recebe TunerReading
 TunerEngine (interface)           lib/core/tuner/tuner_engine.dart
    ↓ implementação PitchTunerEngine compõe:
-AudioInput (interface)            lib/core/audio/          captura PCM
-PitchDetector (interface)         lib/core/dsp/            frequência fundamental
-PitchFilter (interface)           lib/core/dsp/            estabilização / smoothing
-StringMatcher                     lib/core/music/          nota, corda, cents
+AudioInput (interface)            lib/core/audio/          captura PCM + timestamp
+PitchDetector (YinPitchDetector)  lib/core/dsp/            frequência fundamental
+TunerPipeline                     lib/core/tuner/          síncrono, sem áudio:
+  PitchFilter (cadeia)            lib/core/dsp/filters/    gates, oitava, estabilidade, One Euro
+  StringTracker                   lib/core/music/          corda com histerese
+  InTuneHysteresis, SilenceHold   lib/core/tuner/          afinado e hold
 ```
 
 Regra de dependência: `core/` não importa Flutter (exceto `dart:` e
@@ -32,18 +34,21 @@ Regra de dependência: `core/` não importa Flutter (exceto `dart:` e
 
 ## Fluxo de dados
 
-1. `AudioInput.frames` entrega blocos PCM mono `Float32List` em [-1, 1].
-2. `PitchDetector.detect` estima `PitchEstimate(frequency, confidence)` ou `null`.
-3. Estimativas abaixo de `TunerConfig.minConfidence` viram `null`.
-4. `PitchFilter` (cadeia) estabiliza a sequência.
-5. `StringMatcher` encontra a corda mais próxima e o desvio em cents.
-6. `TunerEngine.readings` emite `TunerReading` (ou `null` em silêncio).
+1. `AudioInput.frames` entrega blocos PCM mono `Float32List` em [-1, 1], com
+   timestamp monotônico.
+2. `PitchDetector.detect` estima `PitchEstimate(frequencyHz, confidence, rms)`
+   ou `null`.
+3. `TunerPipeline` aplica a cadeia de `PitchFilter` (gate de confiança, faixa,
+   proteção temporal de oitava, stability gate, One Euro), a histerese de
+   corda, a histerese de afinado e o hold de silêncio. Usa timestamps.
+4. `TunerEngine.readings` emite `TunerReading` (ou `null` em silêncio).
 7. `TunerController` mantém o estado de apresentação (status, leitura, corda
    ativa, cordas já afinadas) e notifica a UI.
 8. Os widgets apenas interpolam visualmente entre leituras.
 
-A estabilidade do ponteiro é responsabilidade do engine (filtros). A animação
-da UI é só interpolação curta entre leituras já estáveis.
+A estabilidade do ponteiro é responsabilidade do `TunerPipeline`. A animação
+da UI é só interpolação curta entre leituras já estáveis. A UI não conhece
+YIN, filtros, octave guard nem histereses.
 
 ## Pontos de extensão
 

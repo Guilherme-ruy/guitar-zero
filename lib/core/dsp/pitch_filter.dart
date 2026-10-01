@@ -2,14 +2,15 @@ import 'pitch_estimate.dart';
 
 /// Etapa de pós-processamento aplicada à sequência de estimativas.
 ///
-/// É aqui que entram estabilidade temporal, filtro de mediana, smoothing
-/// (ex.: One Euro Filter), proteção contra erros de oitava e noise gate
-/// baseado em confiança. Cada técnica é um filtro independente e testável.
+/// Cada técnica (gate de confiança, proteção de oitava, stability gate,
+/// smoothing…) é um filtro independente e testável.
 ///
 /// Recebe `null` quando não houve estimativa no frame, permitindo que o
-/// filtro reaja ao silêncio (ex.: segurar o último valor por um instante).
+/// filtro reaja ao silêncio. [timestamp] é o instante do frame em um relógio
+/// monotônico; filtros dependentes de tempo devem usá-lo em vez de contar
+/// frames.
 abstract interface class PitchFilter {
-  PitchEstimate? process(PitchEstimate? estimate);
+  PitchEstimate? process(PitchEstimate? estimate, Duration timestamp);
 
   void reset();
 }
@@ -21,10 +22,10 @@ class PitchFilterChain implements PitchFilter {
   final List<PitchFilter> filters;
 
   @override
-  PitchEstimate? process(PitchEstimate? estimate) {
+  PitchEstimate? process(PitchEstimate? estimate, Duration timestamp) {
     var current = estimate;
     for (final filter in filters) {
-      current = filter.process(current);
+      current = filter.process(current, timestamp);
     }
     return current;
   }

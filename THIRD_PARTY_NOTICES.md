@@ -25,6 +25,13 @@ deles está incluído no repositório. O `YinPitchDetector`
 paper do YIN; dos projetos vieram apenas ideias e valores iniciais (faixa de
 busca, limiar, gate de RMS, gate de confiança 0.90).
 
+O pipeline temporal (`lib/core/dsp/filters/`, `lib/core/music/string_tracker.dart`,
+`lib/core/tuner/`) também é implementação própria: o One Euro Filter foi
+escrito a partir do paper de Casiez et al.; stability gate, proteção temporal
+de oitava, reset de nova nota, histereses e hold seguem ideias e valores
+iniciais do fgnass/tuner (janela de estabilidade, 20 cents, minCutoff 0.6,
+beta 0.06, 250 cents, 30 cents, 3/6 cents, 700 ms), sem cópia de código.
+
 | Projeto | Licença | Uso |
 | --- | --- | --- |
 | [PitchKit](https://github.com/NicosNicolaou16/PitchKit) @ `26a7909` — Nicos Nicolaou | Apache 2.0 | Referência: YIN, high-pass/DC removal, energy gate, smoothing temporal |

@@ -84,12 +84,14 @@ abstract final class SyntheticSignals {
     return out;
   }
 
-  /// Trecho [offset, offset + length) de [signal] como [AudioFrame].
+  /// Trecho [offset, offset + length) de [signal] como [AudioFrame]. O
+  /// timestamp é a posição do trecho no sinal, somada a [timestamp].
   static AudioFrame frame(
     Float32List signal,
     int sampleRate, {
     int offset = 0,
     int? length,
+    Duration timestamp = Duration.zero,
   }) => AudioFrame(
     samples: Float32List.sublistView(
       signal,
@@ -97,6 +99,11 @@ abstract final class SyntheticSignals {
       offset + (length ?? signal.length - offset),
     ),
     sampleRate: sampleRate,
+    timestamp:
+        timestamp +
+        Duration(
+          microseconds: offset * Duration.microsecondsPerSecond ~/ sampleRate,
+        ),
   );
 }
 

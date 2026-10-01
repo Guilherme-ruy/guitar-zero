@@ -4,28 +4,29 @@ import '../audio/audio_frame.dart';
 import '../audio/audio_input.dart';
 import '../dsp/pitch_detector.dart';
 import '../dsp/pitch_filter.dart';
-import '../music/string_matcher.dart';
 import 'tuner_config.dart';
 import 'tuner_engine.dart';
+import 'tuner_pipeline.dart';
 import 'tuner_reading.dart';
 
-/// [TunerEngine] que compõe o pipeline:
+/// [TunerEngine] que compõe:
 ///
-/// AudioInput → PitchDetector → PitchFilter → StringMatcher → TunerReading
+/// AudioInput → PitchDetector → [TunerPipeline] → TunerReading
 ///
-/// Esta classe só orquestra; cada etapa é injetada e testável isoladamente.
+/// Esta classe só orquestra áudio e streams; toda a lógica temporal (gates,
+/// oitava, estabilidade, smoothing, histereses, hold) está no
+/// [TunerPipeline], que é síncrono e testável sem áudio.
 class PitchTunerEngine implements TunerEngine {
   PitchTunerEngine({
     required this._audioInput,
     required this._detector,
-    this._filter = const PitchFilterChain([]),
     this.config = const TunerConfig(),
-  }) : _matcher = StringMatcher(tuning: config.tuning);
+    PitchFilter? pitchFilter,
+  }) : _pipeline = TunerPipeline(config: config, pitchFilter: pitchFilter);
 
   final AudioInput _audioInput;
   final PitchDetector _detector;
-  final PitchFilter _filter;
-  final StringMatcher _matcher;
+  final TunerPipeline _pipeline;
   final StreamController<TunerReading?> _readings =
       StreamController<TunerReading?>.broadcast();
   StreamSubscription<AudioFrame>? _subscription;
@@ -40,7 +41,7 @@ class PitchTunerEngine implements TunerEngine {
   Future<void> start() async {
     if (_subscription != null) return;
     _detector.reset();
-    _filter.reset();
+    _pipeline.reset();
     _subscription = _audioInput.frames.listen(_onFrame);
     try {
       await _audioInput.start();
@@ -56,6 +57,7 @@ class PitchTunerEngine implements TunerEngine {
     await _subscription?.cancel();
     _subscription = null;
     await _audioInput.stop();
+    _pipeline.reset();
     _readings.add(null);
   }
 
@@ -68,27 +70,6 @@ class PitchTunerEngine implements TunerEngine {
   }
 
   void _onFrame(AudioFrame frame) {
-    var estimate = _detector.detect(frame);
-    if (estimate != null && estimate.confidence < config.minConfidence) {
-      estimate = null;
-    }
-    final filtered = _filter.process(estimate);
-    _readings.add(
-      filtered == null
-          ? null
-          : _toReading(filtered.frequencyHz, filtered.confidence),
-    );
-  }
-
-  TunerReading? _toReading(double frequency, double confidence) {
-    final match = _matcher.match(frequency);
-    if (match == null) return null;
-    return TunerReading(
-      frequency: frequency,
-      confidence: confidence,
-      string: match.string,
-      cents: match.cents,
-      isInTune: match.cents.abs() <= config.inTuneToleranceCents,
-    );
+    _readings.add(_pipeline.process(_detector.detect(frame), frame.timestamp));
   }
 }
