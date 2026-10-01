@@ -1,0 +1,20 @@
+import '../music/tuning.dart';
+
+/// Parâmetros do afinador independentes da plataforma e da UI.
+class TunerConfig {
+  const TunerConfig({
+    this.tuning = Tuning.standard,
+    this.inTuneToleranceCents = 5,
+    this.minConfidence = 0.5,
+  });
+
+  final Tuning tuning;
+
+  /// Desvio máximo, em cents, para considerar a corda afinada. Valor inicial,
+  /// a ser calibrado com testes em instrumentos reais.
+  final double inTuneToleranceCents;
+
+  /// Estimativas com confiança abaixo disto são tratadas como ausência de
+  /// pitch.
+  final double minConfidence;
+}
