@@ -5,6 +5,9 @@ import '../dsp/filters/range_gate.dart';
 import '../dsp/filters/stability_gate.dart';
 import '../dsp/pitch_estimate.dart';
 import '../dsp/pitch_filter.dart';
+import '../music/guitar_string.dart';
+import '../music/pitch_math.dart';
+import '../music/string_matcher.dart';
 import '../music/string_tracker.dart';
 import 'in_tune_hysteresis.dart';
 import 'silence_hold.dart';
@@ -47,6 +50,22 @@ class TunerPipeline {
   final StringTracker _strings;
   final InTuneHysteresis _inTune;
   final SilenceHold _hold;
+  GuitarString? _target;
+
+  /// Corda escolhida manualmente, ou `null` no modo automático.
+  GuitarString? get targetString => _target;
+
+  /// Modo manual: todo pitch detectado é medido contra [string] (cents
+  /// dobrados por oitava, em (−600, 600]) — útil para uma corda muito
+  /// desafinada, que no automático seria associada à corda vizinha.
+  /// `null` volta ao automático. Trocar o alvo descarta histereses e hold.
+  void setTargetString(GuitarString? string) {
+    if (string == _target) return;
+    _target = string;
+    _strings.reset();
+    _inTune.reset();
+    _hold.reset();
+  }
 
   /// Cadeia padrão de filtros de pitch, configurada por [config].
   static PitchFilter standardPitchFilter(TunerConfig config) =>
@@ -84,7 +103,16 @@ class TunerPipeline {
     final filtered = pitchFilter.process(estimate, timestamp);
     TunerReading? reading;
     if (filtered != null) {
-      final match = _strings.match(filtered.frequencyHz);
+      final target = _target;
+      final match = target == null
+          ? _strings.match(filtered.frequencyHz)
+          : StringMatch(
+              string: target,
+              cents: octaveFoldedCents(
+                filtered.frequencyHz,
+                target.targetFrequency,
+              ),
+            );
       if (match != null) {
         reading = TunerReading(
           frequency: filtered.frequencyHz,

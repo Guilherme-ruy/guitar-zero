@@ -37,7 +37,8 @@ Regra de dependência: `core/` não importa Flutter (exceto `dart:` e
 | `lib/core/tuner/` | Engine que orquestra o pipeline e produz `TunerReading` |
 | `lib/features/tuner/` | Controller e widgets da tela do afinador |
 | `tool/` | Relatório de caracterização e benchmark do detector (fora do CI) |
-| `lib/platform/` | Adaptadores de plugins (hoje só `record`) |
+| `lib/features/preferences/` | Preferências visuais (instrumento, visual, nomes) e o contrato de armazenamento |
+| `lib/platform/` | Adaptadores de plugins (`record`, `shared_preferences`) |
 | `lib/main.dart` | Composition root: único lugar que escolhe implementações concretas |
 
 ## Fluxo de dados
@@ -62,6 +63,25 @@ Regra de dependência: `core/` não importa Flutter (exceto `dart:` e
 A estabilidade do ponteiro é responsabilidade do `TunerPipeline`. A animação
 da UI é só interpolação curta entre leituras já estáveis. A UI não conhece
 YIN, filtros, octave guard nem histereses.
+
+## Modo manual
+
+`TunerController.selectString` / `setAutoMode` → `TunerEngine.setTargetString`
+→ `FrameProcessor` (mensagem para o isolate) → `TunerPipeline.setTargetString`.
+No manual, o `StringTracker` é ignorado e os cents são medidos contra a corda
+escolhida, dobrados por oitava em (−600, 600]: uma corda muito desafinada
+(ex.: −300 c) continua associada a ela, e um erro de oitava do detector não
+importa. Trocar o alvo descarta histereses, hold e resultados em trânsito do
+isolate.
+
+## Visual do instrumento
+
+`HeadstockGeometry` define, em unidades de projeto (100 × 160), o contorno,
+tarraxas, pinos, nut e a posição dos botões de cada corda. `HeadstockPainter`
+(desenho) e `HeadstockView` (botões) usam a mesma geometria, então não se
+desalinham. Sem imagens: escala para qualquer tela. O tamanho dos botões é
+limitado pelo espaçamento real entre tarraxas (30–48 dp), e o layout é
+testado em 360×640, 375×667, 390×844 e 412×915 sem estouro nem sobreposição.
 
 ## Pontos de extensão
 

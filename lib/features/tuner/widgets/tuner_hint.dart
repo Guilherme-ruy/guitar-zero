@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/theme.dart';
+import '../../../core/music/guitar_string.dart';
 import '../../../core/tuner/tuner_reading.dart';
+import '../../preferences/tuner_preferences.dart';
+import '../note_names.dart';
 import '../tuner_controller.dart';
 
 /// Instrução curta para o usuário, conforme o estado do afinador.
@@ -11,7 +14,13 @@ class TunerHint extends StatelessWidget {
     required this.status,
     required this.reading,
     this.onRetry,
+    this.manualString,
+    this.naming = NoteNaming.letters,
   });
+
+  /// Corda escolhida no modo manual (muda a instrução de espera).
+  final GuitarString? manualString;
+  final NoteNaming naming;
 
   final TunerStatus status;
   final TunerReading? reading;
@@ -63,7 +72,14 @@ class TunerHint extends StatelessWidget {
       case TunerStatus.listening:
         final r = reading;
         if (r == null || r.isHeld) {
-          return ('Toque qualquer corda', GzColors.textSecondary);
+          final manual = manualString;
+          return (
+            manual == null
+                ? 'Toque qualquer corda'
+                : 'Toque a corda ${naming.primary(manual.note)} '
+                      '(${manual.number}ª)',
+            GzColors.textSecondary,
+          );
         }
         if (r.isInTune) return ('Afinada', GzColors.zero);
         return r.cents < 0

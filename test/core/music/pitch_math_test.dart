@@ -42,4 +42,23 @@ void main() {
       expect(strings[i].targetFrequency, closeTo(expected[i], 0.005));
     }
   });
+
+  test('nomes em solfejo', () {
+    expect(Tuning.standard.strings.map((s) => s.note.solfegeName), [
+      'Mi',
+      'Lá',
+      'Ré',
+      'Sol',
+      'Si',
+      'Mi',
+    ]);
+    expect(const Note(61).solfegeName, 'Dó#');
+  });
+
+  test('cents dobrados por oitava ficam em (−600, 600]', () {
+    expect(octaveFoldedCents(330, 82.5), closeTo(0, 1e-9));
+    expect(octaveFoldedCents(440 * 1.5, 440), closeTo(-498.04, 0.01));
+    expect(octaveFoldedCents(frequencyFromMidi(75), 440), 600);
+    expect(octaveFoldedCents(frequencyFromMidi(63), 440), 600);
+  });
 }

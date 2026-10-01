@@ -4,6 +4,7 @@ import '../audio/audio_frame.dart';
 import '../audio/audio_input.dart';
 import '../dsp/pitch_detector.dart';
 import '../dsp/pitch_filter.dart';
+import '../music/guitar_string.dart';
 import 'frame_processor.dart';
 import 'tuner_config.dart';
 import 'tuner_diagnostics.dart';
@@ -57,6 +58,10 @@ class PitchTunerEngine implements TunerEngine {
 
   @override
   Stream<TunerDiagnostics> get diagnostics => _processor.diagnostics;
+
+  @override
+  void setTargetString(GuitarString? string) =>
+      _processor.setTargetString(string);
 
   @override
   Future<void> start() async {

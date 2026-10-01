@@ -356,4 +356,52 @@ void main() {
     final b = runPipeline(pipeline(), steps).map((r) => r?.cents).toList();
     expect(a, b);
   });
+
+  group('modo manual (corda escolhida)', () {
+    test(
+      'corda muito desafinada é medida contra a escolhida, não a vizinha',
+      () {
+        // E2 −300 cents: no automático seria tratada como outra corda/fora.
+        final p = pipeline()..setTargetString(strings[0]);
+        final out = runPipeline(
+          p,
+          (PitchSequenceBuilder()..note(e2, 10, cents: -300)).build(),
+        );
+        expect(out.last!.string, strings[0]);
+        expect(out.last!.cents, closeTo(-300, 0.01));
+      },
+    );
+
+    test('A2 tocada com E2 escolhida: mede contra E2 (+500 c, sem trocar)', () {
+      final p = pipeline()..setTargetString(strings[0]);
+      final out = runPipeline(
+        p,
+        (PitchSequenceBuilder()..note(a2, 10)).build(),
+      );
+      expect(out.last!.string, strings[0]);
+      expect(out.last!.cents, closeTo(500, 0.01));
+    });
+
+    test('oitava é ignorada no manual (E4 contra E2 = 0 c)', () {
+      final p = pipeline()..setTargetString(strings[0]);
+      final out = runPipeline(
+        p,
+        (PitchSequenceBuilder()..note(strings[5].targetFrequency, 10, cents: 4))
+            .build(),
+      );
+      expect(out.last!.string, strings[0]);
+      expect(out.last!.cents, closeTo(4, 0.01));
+    });
+
+    test('voltar ao automático restaura a detecção da corda', () {
+      final p = pipeline()..setTargetString(strings[0]);
+      runPipeline(p, (PitchSequenceBuilder()..note(a2, 5)).build());
+      p.setTargetString(null);
+      final out = runPipeline(
+        p,
+        (PitchSequenceBuilder()..note(a2, 10)).build(),
+      );
+      expect(out.last!.string, strings[1]);
+    });
+  });
 }

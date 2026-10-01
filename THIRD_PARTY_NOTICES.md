@@ -75,12 +75,15 @@ repositório (`tool/real_audio_eval.dart`).
 | --- | --- | --- |
 | Flutter SDK | BSD-3-Clause | Framework |
 | [`record`](https://pub.dev/packages/record) 7.1.1 (+ `record_platform_interface`, `record_android`, `record_ios`, `record_linux`, `record_macos`, `record_web`, `record_windows`) | BSD-3-Clause (© 2022 openapi4j authors) | Captura PCM do microfone; só `lib/platform/record_pcm_recorder.dart` importa o plugin |
+| [`shared_preferences`](https://pub.dev/packages/shared_preferences) 2.5.5 (+ pacotes de plataforma `_android`, `_foundation`, `_linux`, `_web`, `_windows`, `_platform_interface`) | BSD-3-Clause (© The Flutter Authors) | Preferências visuais locais; só `lib/platform/shared_preferences_store.dart` importa o plugin |
+| `path_provider_*`, `file`, `platform`, `ffi`, `xdg_directories` (transitivas, só desktop) | BSD-3-Clause (© Flutter/Dart authors) | Usadas por `shared_preferences` em Linux/Windows; não incluídas no app Android/iOS |
 | `plugin_platform_interface` (transitiva) | BSD-3-Clause (© The Flutter Authors) | Interface de plugins |
 | `web` (transitiva) | BSD-3-Clause (© Dart project authors) | Usada pelo `record_web`; não incluída no app Android/iOS |
 | `flutter_lints` (dev) | BSD-3-Clause | Lint |
 
-O plugin `record` declara apenas `RECORD_AUDIO` no Android (sem `INTERNET`;
-verificado no CI sobre o APK release).
+O plugin `record` declara apenas `RECORD_AUDIO` no Android e
+`shared_preferences` não declara permissões (sem `INTERNET`; verificado no CI
+sobre o APK release).
 
 As licenças das dependências são registradas automaticamente pelo
 `LicenseRegistry` do Flutter e podem ser exibidas por `showLicensePage`.

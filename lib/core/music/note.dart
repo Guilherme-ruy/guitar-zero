@@ -22,8 +22,26 @@ class Note {
     'B',
   ];
 
-  /// Nome da nota sem oitava (ex.: `E`, `F#`).
+  static const List<String> _solfege = [
+    'Dó',
+    'Dó#',
+    'Ré',
+    'Ré#',
+    'Mi',
+    'Fá',
+    'Fá#',
+    'Sol',
+    'Sol#',
+    'Lá',
+    'Lá#',
+    'Si',
+  ];
+
+  /// Nome da nota sem oitava, em letras (ex.: `E`, `F#`).
   String get name => _names[midi % 12];
+
+  /// Nome da nota sem oitava, em solfejo (ex.: `Mi`, `Fá#`).
+  String get solfegeName => _solfege[midi % 12];
 
   /// Oitava em notação científica (C4 = dó central).
   int get octave => midi ~/ 12 - 1;

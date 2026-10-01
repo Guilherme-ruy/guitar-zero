@@ -5,6 +5,7 @@ import 'package:guitar_zero/core/audio/audio_frame.dart';
 import 'package:guitar_zero/core/audio/audio_input.dart';
 import 'package:guitar_zero/core/dsp/pitch_detector.dart';
 import 'package:guitar_zero/core/dsp/pitch_estimate.dart';
+import 'package:guitar_zero/core/music/guitar_string.dart';
 import 'package:guitar_zero/core/tuner/tuner_config.dart';
 import 'package:guitar_zero/core/tuner/tuner_diagnostics.dart';
 import 'package:guitar_zero/core/tuner/tuner_engine.dart';
@@ -78,6 +79,12 @@ class FakeTunerEngine implements TunerEngine {
   void emit(TunerReading? reading) => _readings.add(reading);
 
   void fail(Object error) => _readings.addError(error);
+
+  /// Último alvo recebido (modo manual) — `null` no automático.
+  GuitarString? target;
+
+  @override
+  void setTargetString(GuitarString? string) => target = string;
 
   @override
   Future<void> start() async {

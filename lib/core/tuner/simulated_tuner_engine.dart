@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import '../music/guitar_string.dart';
 import '../music/pitch_math.dart';
 import 'tuner_config.dart';
 import 'tuner_diagnostics.dart';
@@ -33,6 +34,17 @@ class SimulatedTunerEngine implements TunerEngine {
 
   int _step = 0;
   int _stringIndex = 0;
+  GuitarString? _target;
+
+  @override
+  void setTargetString(GuitarString? string) {
+    _target = string;
+    if (string != null) {
+      _stringIndex = config.tuning.strings.indexOf(string);
+      _beginString();
+    }
+  }
+
   double _startCents = 0;
 
   @override
@@ -71,7 +83,9 @@ class SimulatedTunerEngine implements TunerEngine {
   void _onTick() {
     _step++;
     if (_step > _ticksPerString + _silentTicks) {
-      _stringIndex = (_stringIndex + 1) % config.tuning.strings.length;
+      if (_target == null) {
+        _stringIndex = (_stringIndex + 1) % config.tuning.strings.length;
+      }
       _beginString();
     }
     if (_step > _ticksPerString) {

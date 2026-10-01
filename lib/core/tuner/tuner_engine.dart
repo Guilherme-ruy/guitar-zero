@@ -1,3 +1,4 @@
+import '../music/guitar_string.dart';
 import 'tuner_config.dart';
 import 'tuner_diagnostics.dart';
 import 'tuner_reading.dart';
@@ -18,6 +19,9 @@ abstract interface class TunerEngine {
 
   /// Medidas por frame para depuração/calibração (pode ser vazio).
   Stream<TunerDiagnostics> get diagnostics;
+
+  /// Modo manual: mede tudo contra [string]. `null` = automático.
+  void setTargetString(GuitarString? string);
 
   /// Inicia a escuta. Pode lançar `AudioInputException`.
   Future<void> start();

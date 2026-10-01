@@ -6,6 +6,7 @@ import 'package:guitar_zero/core/dsp/harmonic_pitch_detector.dart';
 import 'package:guitar_zero/core/dsp/pitch_detector.dart';
 import 'package:guitar_zero/core/dsp/pitch_estimate.dart';
 import 'package:guitar_zero/core/music/pitch_math.dart';
+import 'package:guitar_zero/core/music/tuning.dart';
 import 'package:guitar_zero/core/tuner/frame_processor.dart';
 import 'package:guitar_zero/core/tuner/tuner_diagnostics.dart';
 import 'package:guitar_zero/core/tuner/tuner_reading.dart';
@@ -127,6 +128,25 @@ void main() {
 }
 
 void _diagnosticsTests() {
+  test('modo manual chega ao isolate', () async {
+    final frames = a2Frames(); // A2 −10 cents
+    final processor = IsolateFrameProcessor();
+    await processor.start();
+    processor.setTargetString(Tuning.standard.strings[0]); // E2
+    TunerReading? last;
+    for (final frame in frames) {
+      final got = await collect(
+        processor,
+        1,
+        feed: () => processor.process(frame),
+      );
+      last = got.single ?? last;
+    }
+    expect(last!.string, Tuning.standard.strings[0]);
+    expect(last.cents, closeTo(490, 0.1)); // A2 −10 c = E2 + 490 c
+    await processor.dispose();
+  });
+
   test('diagnóstico por frame: estimativa bruta, tempo e descartes', () async {
     final frames = a2Frames();
     final processor = IsolateFrameProcessor();

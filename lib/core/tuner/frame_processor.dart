@@ -7,6 +7,7 @@ import '../dsp/harmonic_pitch_detector.dart';
 import '../dsp/pitch_detector.dart';
 import '../dsp/pitch_estimate.dart';
 import '../dsp/pitch_filter.dart';
+import '../music/guitar_string.dart';
 import 'tuner_config.dart';
 import 'tuner_diagnostics.dart';
 import 'tuner_pipeline.dart';
@@ -31,6 +32,9 @@ abstract interface class FrameProcessor {
   /// Descarta o estado (detector, filtros, histereses) e resultados ainda
   /// não entregues.
   void reset();
+
+  /// Corda alvo do modo manual (`null` = automático).
+  void setTargetString(GuitarString? string);
 
   Future<void> dispose();
 }
@@ -100,6 +104,10 @@ class InlineFrameProcessor implements FrameProcessor {
     detector.reset();
     _pipeline.reset();
   }
+
+  @override
+  void setTargetString(GuitarString? string) =>
+      _pipeline.setTargetString(string);
 
   @override
   Future<void> dispose() async {
@@ -181,6 +189,7 @@ class IsolateFrameProcessor implements FrameProcessor {
       debugName: 'guitar_zero_dsp',
     );
     _toWorker = await ready.future;
+    if (_target != null) _toWorker!.send(_WorkerTarget(_target));
   }
 
   @override
@@ -211,6 +220,17 @@ class IsolateFrameProcessor implements FrameProcessor {
     _generation++;
     _pending = null;
     _toWorker?.send(const _WorkerReset());
+  }
+
+  GuitarString? _target;
+
+  @override
+  void setTargetString(GuitarString? string) {
+    _target = string;
+    // Leituras em trânsito ainda são do alvo anterior: descartadas.
+    _generation++;
+    _pending = null;
+    _toWorker?.send(_WorkerTarget(string));
   }
 
   @override
@@ -250,6 +270,12 @@ class _WorkerReset {
   const _WorkerReset();
 }
 
+class _WorkerTarget {
+  const _WorkerTarget(this.string);
+
+  final GuitarString? string;
+}
+
 class _WorkerResult {
   const _WorkerResult(this.generation, this.reading, this.diagnostics);
 
@@ -278,6 +304,8 @@ void _workerMain(_WorkerSetup setup) {
       case _WorkerReset():
         detector.reset();
         pipeline.reset();
+      case _WorkerTarget(:final string):
+        pipeline.setTargetString(string);
     }
   });
 }

@@ -11,7 +11,11 @@ A primeira versão é só um afinador, muito bem feito:
 
 - afinação Standard: E2 82.41 · A2 110.00 · D3 146.83 · G3 196.00 ·
   B3 246.94 · E4 329.63 Hz;
-- identificação automática da corda;
+- identificação automática da corda (**AUTO**) ou escolha manual tocando na
+  corda; só o switch volta ao automático;
+- headstock de **violão** (3+3) ou **guitarra** (6 em linha) desenhado em
+  vetor, ou visual **minimalista**;
+- nomes das notas em letras (E A D), solfejo (Mi Lá Ré) ou ambos;
 - indicação de abaixo/acima em cents e feedback visual quando afinada.
 
 Fora de escopo nesta versão: login, backend, banco de dados, analytics,
@@ -30,9 +34,11 @@ anúncios, metrônomo, acordes, afinações alternativas, recursos sociais.
 - Flutter 3.47.5 (stable) · Dart 3.13
 - Plataforma inicial: Android. iOS preparado (pasta `ios/` e
   `NSMicrophoneUsageDescription`), ainda não validado.
-- Única dependência de runtime: [`record`](https://pub.dev/packages/record)
-  (BSD-3-Clause) para ler o microfone, isolada em `lib/platform/`. Estado com
-  `ChangeNotifier` nativo.
+- Dependências de runtime (BSD-3-Clause), isoladas em `lib/platform/`:
+  [`record`](https://pub.dev/packages/record) para ler o microfone e
+  [`shared_preferences`](https://pub.dev/packages/shared_preferences) para
+  guardar as preferências visuais no aparelho. Estado com `ChangeNotifier`
+  nativo.
 
 ## Arquitetura
 
@@ -78,7 +84,7 @@ dart run tool/temporal_report.dart # pipeline temporal: janela 3 vs 5, beta
 | Teoria musical (notas, cents, Standard, corda mais próxima) | ✅ implementado e testado |
 | Contratos `AudioInput`, `PitchDetector`, `PitchFilter`, `TunerEngine` | ✅ |
 | `PitchTunerEngine` (orquestração do pipeline) | ✅ testado com fakes |
-| Tela do afinador | ✅ usa o microfone real; modo demo opcional; painel de diagnóstico oculto |
+| Tela do afinador | ✅ microfone real; AUTO/manual; violão, guitarra ou minimalista; letras/solfejo; ajustes salvos; painel de diagnóstico oculto |
 | Captura de microfone (`record`, PCM16, sem AGC/NS/AEC) + DSP em isolate | ✅ implementado e testado com fakes; ⚠️ **não validado em aparelho** |
 | Detector YIN em Dart puro (`YinPitchDetector`) | ✅ testado com sinais sintéticos |
 | Pipeline temporal (gates, octave guard, stability gate, One Euro, histereses, hold) | ✅ testado com sequências sintéticas |

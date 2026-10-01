@@ -34,9 +34,33 @@ class TunerController extends ChangeNotifier {
   /// Leitura atual, ou `null` se nenhuma nota está soando.
   TunerReading? get reading => _reading;
 
-  /// Última corda detectada. Permanece destacada durante o silêncio para que
-  /// a interface não "pisque" entre uma palhetada e outra.
-  GuitarString? get activeString => _activeString;
+  /// Corda em destaque: no manual, a escolhida; no automático, a última
+  /// detectada (permanece durante o silêncio para a interface não piscar).
+  GuitarString? get activeString => _manualString ?? _activeString;
+
+  GuitarString? _manualString;
+
+  /// `true` no modo automático (padrão): a corda é identificada pelo som.
+  bool get isAutoMode => _manualString == null;
+
+  /// Liga/desliga o automático (o switch "AUTO"). Ao entrar no manual pelo
+  /// switch, fica escolhida a corda em destaque (ou a 6ª, se nenhuma).
+  void setAutoMode(bool auto) {
+    if (auto == isAutoMode) return;
+    _applyTarget(auto ? null : (_activeString ?? tuning.strings.first));
+  }
+
+  /// Escolhe a corda manualmente (tocar numa corda). Entra no modo manual;
+  /// só o switch volta ao automático.
+  void selectString(GuitarString string) => _applyTarget(string);
+
+  void _applyTarget(GuitarString? string) {
+    _manualString = string;
+    _engine.setTargetString(string);
+    if (string != null) _activeString = string;
+    _reading = null;
+    notifyListeners();
+  }
 
   /// Cordas que já atingiram a tolerância de afinação nesta sessão.
   Set<GuitarString> get tunedStrings => Set.unmodifiable(_tunedStrings);

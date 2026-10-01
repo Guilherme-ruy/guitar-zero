@@ -69,6 +69,51 @@ void main() {
     controller.dispose();
   });
 
+  group('automático / manual', () {
+    final strings = Tuning.standard.strings;
+
+    test('começa no automático', () {
+      final controller = TunerController(FakeTunerEngine());
+      expect(controller.isAutoMode, isTrue);
+      controller.dispose();
+    });
+
+    test('tocar numa corda entra no manual e informa o engine', () {
+      final engine = FakeTunerEngine();
+      final controller = TunerController(engine)..selectString(strings[3]);
+      expect(controller.isAutoMode, isFalse);
+      expect(controller.activeString, strings[3]);
+      expect(engine.target, strings[3]);
+      // Outra corda: continua manual, troca o alvo.
+      controller.selectString(strings[1]);
+      expect(engine.target, strings[1]);
+      controller.dispose();
+    });
+
+    test(
+      'switch: manual com a corda em destaque; de novo volta ao auto',
+      () async {
+        final engine = FakeTunerEngine();
+        final controller = TunerController(engine);
+        await controller.start();
+        engine.emit(_reading(2, -12));
+        controller.setAutoMode(false);
+        expect(controller.isAutoMode, isFalse);
+        expect(engine.target, strings[2]);
+        controller.setAutoMode(true);
+        expect(controller.isAutoMode, isTrue);
+        expect(engine.target, isNull);
+        controller.dispose();
+      },
+    );
+
+    test('switch para manual sem corda detectada escolhe a 6ª (E2)', () {
+      final engine = FakeTunerEngine();
+      TunerController(engine).setAutoMode(false);
+      expect(engine.target, strings.first);
+    });
+  });
+
   test('stop durante o start (ex.: app pausado no pedido de permissão) '
       'não deixa o engine rodando', () async {
     final engine = _SlowStartEngine();

@@ -1,13 +1,24 @@
 import 'package:flutter/material.dart';
 
 import '../core/tuner/tuner_engine.dart';
+import '../features/preferences/preferences_store.dart';
+import '../features/preferences/tuner_preferences.dart';
 import '../features/tuner/tuner_screen.dart';
 import 'theme.dart';
 
 class GuitarZeroApp extends StatelessWidget {
-  const GuitarZeroApp({super.key, required this.engine, this.isDemo = false});
+  GuitarZeroApp({
+    super.key,
+    required this.engine,
+    TunerPreferences? preferences,
+    this.isDemo = false,
+  }) : preferences =
+           preferences ?? TunerPreferences(InMemoryPreferencesStore());
 
   final TunerEngine engine;
+
+  /// Preferências visuais; por padrão em memória (testes).
+  final TunerPreferences preferences;
 
   /// Indica que [engine] é simulado; a UI exibe um selo "DEMO".
   final bool isDemo;
@@ -18,7 +29,11 @@ class GuitarZeroApp extends StatelessWidget {
       title: 'Guitar Zero',
       debugShowCheckedModeBanner: false,
       theme: buildGzTheme(),
-      home: TunerScreen(engine: engine, isDemo: isDemo),
+      home: TunerScreen(
+        engine: engine,
+        preferences: preferences,
+        isDemo: isDemo,
+      ),
     );
   }
 }

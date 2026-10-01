@@ -23,3 +23,12 @@ double midiFromFrequency(double frequency) =>
 /// Frequência, em Hz, da nota MIDI [midi] em temperamento igual.
 double frequencyFromMidi(num midi) =>
     kA4Frequency * math.pow(2, (midi - kA4Midi) / 12).toDouble();
+
+/// Desvio em cents de [frequency] em relação a [reference], ignorando a
+/// oitava: resultado em (−600, 600].
+double octaveFoldedCents(double frequency, double reference) {
+  final cents = centsBetween(frequency, reference);
+  final folded = cents - 1200 * (cents / 1200).round();
+  // Meio-oitava exata (com erro de arredondamento) vai para +600.
+  return folded <= -600 + 1e-9 ? 600 : folded;
+}
