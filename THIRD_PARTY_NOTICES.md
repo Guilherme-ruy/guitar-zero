@@ -19,8 +19,11 @@ Ao reutilizar ou adaptar código de terceiros:
 
 ## Referências técnicas (consultadas, não copiadas)
 
-Projetos estudados como referência de técnica. Nenhum código deles está
-incluído no repositório.
+Projetos estudados como referência técnica e de parâmetros. Nenhum código
+deles está incluído no repositório. O `YinPitchDetector`
+(`lib/core/dsp/yin_pitch_detector.dart`) é implementação própria a partir do
+paper do YIN; dos projetos vieram apenas ideias e valores iniciais (faixa de
+busca, limiar, gate de RMS, gate de confiança 0.90).
 
 | Projeto | Licença | Uso |
 | --- | --- | --- |

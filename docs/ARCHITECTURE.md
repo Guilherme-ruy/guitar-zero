@@ -27,6 +27,7 @@ Regra de dependência: `core/` não importa Flutter (exceto `dart:` e
 | `lib/core/dsp/` | Contratos de detecção de pitch e filtros (`PitchDetector`, `PitchFilter`) |
 | `lib/core/tuner/` | Engine que orquestra o pipeline e produz `TunerReading` |
 | `lib/features/tuner/` | Controller e widgets da tela do afinador |
+| `tool/` | Relatório de caracterização e benchmark do detector (fora do CI) |
 | `lib/main.dart` | Composition root: único lugar que escolhe implementações concretas |
 
 ## Fluxo de dados
@@ -67,5 +68,6 @@ da UI é só interpolação curta entre leituras já estáveis.
 ## Estado atual
 
 `main.dart` usa `SimulatedTunerEngine` (selo DEMO na tela) porque ainda não
-existem `AudioInput` nem `PitchDetector` concretos. `PitchTunerEngine` já está
+existe `AudioInput` concreto. O `YinPitchDetector` (Dart puro) já existe e é
+testado, inclusive dentro do `PitchTunerEngine`. `PitchTunerEngine` já está
 implementado e testado com fakes.

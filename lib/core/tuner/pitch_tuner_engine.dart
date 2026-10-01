@@ -76,7 +76,7 @@ class PitchTunerEngine implements TunerEngine {
     _readings.add(
       filtered == null
           ? null
-          : _toReading(filtered.frequency, filtered.confidence),
+          : _toReading(filtered.frequencyHz, filtered.confidence),
     );
   }
 

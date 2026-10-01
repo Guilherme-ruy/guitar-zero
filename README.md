@@ -54,8 +54,15 @@ Captura PCM mono → noise gate → **YIN** → restrição de faixa → stabili
 proteção contra oitava → mediana → **One Euro Filter** em cents → corda mais
 provável com histerese → leitura para a UI.
 
-A proposta completa, ainda em revisão, está em
+Estratégia, fases e resultados medidos em
 [docs/DSP_STRATEGY.md](docs/DSP_STRATEGY.md).
+
+Ferramentas (fora do CI):
+
+```bash
+dart run tool/yin_report.dart      # caracterização com sinais sintéticos
+dart run tool/yin_benchmark.dart   # custo por frame
+```
 
 ## Situação atual
 
@@ -67,7 +74,9 @@ A proposta completa, ainda em revisão, está em
 | `PitchTunerEngine` (orquestração do pipeline) | ✅ testado com fakes |
 | Tela do afinador (estrutural) | ✅ rodando com engine simulado (selo **DEMO**) |
 | Captura de microfone real | ⏳ não implementado |
-| Detecção de pitch (YIN) e filtros | ⏳ aguardando revisão da estratégia |
+| Detector YIN em Dart puro (`YinPitchDetector`) | ✅ testado com sinais sintéticos |
+| Filtros temporais (stability gate, One Euro, octave snap) | ⏳ próximas fases |
+| Correção de erros de oitava | ⏳ limitação documentada |
 | Execução em aparelho Android / iOS | ⏳ não validado |
 
 ## Como executar

@@ -5,7 +5,7 @@ class TunerConfig {
   const TunerConfig({
     this.tuning = Tuning.standard,
     this.inTuneToleranceCents = 5,
-    this.minConfidence = 0.5,
+    this.minConfidence = 0.9,
   });
 
   final Tuning tuning;
@@ -15,6 +15,7 @@ class TunerConfig {
   final double inTuneToleranceCents;
 
   /// Estimativas com confiança abaixo disto são tratadas como ausência de
-  /// pitch.
+  /// pitch. 0.90 é ponto de partida inspirado no fgnass/tuner; precisa ser
+  /// validado em aparelhos reais (microfone, AGC e ruído afetam a confiança).
   final double minConfidence;
 }
