@@ -30,7 +30,8 @@ anúncios, metrônomo, acordes, afinações alternativas, recursos sociais.
 - Flutter 3.47.5 (stable) · Dart 3.13
 - Plataforma inicial: Android. iOS preparado (pasta `ios/` e
   `NSMicrophoneUsageDescription`), ainda não validado.
-- Sem dependências de runtime além do SDK Flutter. Estado com
+- Única dependência de runtime: [`record`](https://pub.dev/packages/record)
+  (BSD-3-Clause) para ler o microfone, isolada em `lib/platform/`. Estado com
   `ChangeNotifier` nativo.
 
 ## Arquitetura
@@ -75,11 +76,12 @@ dart run tool/temporal_report.dart # pipeline temporal: janela 3 vs 5, beta
 | Teoria musical (notas, cents, Standard, corda mais próxima) | ✅ implementado e testado |
 | Contratos `AudioInput`, `PitchDetector`, `PitchFilter`, `TunerEngine` | ✅ |
 | `PitchTunerEngine` (orquestração do pipeline) | ✅ testado com fakes |
-| Tela do afinador (estrutural) | ✅ rodando com engine simulado (selo **DEMO**) |
-| Captura de microfone real | ⏳ não implementado |
+| Tela do afinador | ✅ usa o microfone real; modo demo opcional |
+| Captura de microfone (`record`, PCM16, sem AGC/NS/AEC) + DSP em isolate | ✅ implementado e testado com fakes; ⚠️ **não validado em aparelho** |
 | Detector YIN em Dart puro (`YinPitchDetector`) | ✅ testado com sinais sintéticos |
 | Pipeline temporal (gates, octave guard, stability gate, One Euro, histereses, hold) | ✅ testado com sequências sintéticas |
 | Análise espectral (FFT própria, correção de oitava, refinamento, harmonicidade) | ✅ testada com sinais sintéticos |
+| Build Android (APK release) no CI | ✅ |
 | Execução em aparelho Android / iOS | ⏳ não validado |
 
 ## Como executar
@@ -88,12 +90,16 @@ Pré-requisitos: Flutter 3.47.5 stable e Android SDK.
 
 ```bash
 flutter pub get
-flutter run           # aparelho/emulador Android
+flutter run                                     # microfone real
+flutter run --dart-define=GUITAR_ZERO_DEMO=true # leituras simuladas (selo DEMO)
 flutter analyze
 flutter test
 ```
 
-Hoje o app mostra leituras **simuladas** (selo DEMO): ainda não usa o microfone.
+**Sem Flutter instalado**: cada push gera no GitHub Actions o artefato
+`guitar-zero-apk` (APK release, assinado com a chave de debug — só para
+teste). Baixe em *Actions → CI → execução → Artifacts* e instale no Android
+(permitindo "fontes desconhecidas").
 
 ## CI
 
@@ -104,12 +110,12 @@ branch) e em pull requests para a `main`:
 2. `dart format --set-exit-if-changed`
 3. `flutter analyze --fatal-infos`
 4. `flutter test`
-
-Build Android (APK) será adicionado depois.
+5. `flutter build apk --release` + verificação de que o APK não declara
+   `INTERNET` + upload do APK como artefato.
 
 ## Open source
 
-Nenhum código de terceiros incluído até agora. Referências técnicas e
+Nenhum código de terceiros copiado. Dependências, referências técnicas e
 política de reutilização: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 O GuitarTuna é usado apenas como referência de experiência de usuário; nenhum

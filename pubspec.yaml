@@ -10,6 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  record: ^7.1.1
 
 dev_dependencies:
   flutter_test:

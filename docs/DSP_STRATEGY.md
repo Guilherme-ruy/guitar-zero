@@ -56,15 +56,31 @@ resolvido agora; a escolha virá de medições com áudio real.
 AGC e ruído ambiente podem baixar a confiança de notas reais. O valor precisa
 ser validado em aparelhos.
 
-## Captura (`AudioInput`) — fase futura
+## Captura (fase 4)
 
-- Mono, PCM float normalizado, 44.1 ou 48 kHz (o que o aparelho oferecer).
-- Sinal cru: AGC, supressão de ruído e cancelamento de eco desligados.
-- O detector aceita qualquer tamanho de frame ≥ `2 × (sr/fmin) + 1`
-  (1601 amostras a 48 kHz com fmin = 60 Hz); o `AudioInput` entregará frames
-  de `frameSize` com overlap.
-- Opções de implementação (decisão pendente): plugin `record` atrás de
-  `AudioInput`, ou platform channel próprio (`AudioRecord` / `AVAudioEngine`).
+Implementada em `MicrophoneAudioInput` + `RecordPcmRecorder`
+(`lib/platform/`). Decisões:
+
+| Decisão | Escolha | Motivo |
+| --- | --- | --- |
+| Mecanismo | plugin `record` 7.1.1 (BSD-3) atrás de `PcmRecorder` | Android + iOS, stream PCM, AGC/NS/AEC desligáveis, fonte de áudio configurável; ~1.1 M downloads/mês, 160/160 pontos no pub.dev. Trocar por código nativo = outra implementação de `PcmRecorder`. |
+| Formato | PCM16 mono | Sem compressão; nada vai para arquivo. |
+| Taxa | 44.1 kHz | Única taxa garantida em todo Android. |
+| Fonte Android | `VOICE_RECOGNITION` | O Android CDD exige AGC e redução de ruído desligados e resposta ~plana nessa fonte. `UNPROCESSED` é opcional por aparelho. |
+| AGC / NS / AEC | desligados | Sinal cru para o DSP. |
+| Frame / hop | 4096 amostras (93 ms) / 40 ms (1764 amostras) | Meta de latência; 8192 fica como alternativa medida. |
+| Timestamps | contagem de amostras (`PcmFramer`) | Monotônico e exato, imune a atrasos na entrega dos blocos. |
+| Onde roda o DSP | isolate dedicado (`IsolateFrameProcessor`) | 3–9 ms/frame no servidor, mais em celular; fora da thread da UI. Backpressure descarta frames pendentes antigos. |
+
+Latência estimada até a primeira leitura (44.1 kHz, 4096, janela de
+estabilidade 3, hop 40 ms): 93 ms (encher o frame) + 80 ms (gate) ≈
+**175 ms**, mais o buffer do sistema de áudio e o processamento
+(≈ 5–20 ms) — acima da meta de 150 ms, a medir em aparelho.
+
+Não validado ainda: comportamento real do `VOICE_RECOGNITION` em aparelhos,
+tamanho dos blocos entregues pelo plugin, latência do sistema, consumo de
+bateria, interrupções (ligações) — o stream é pausado pelo plugin e o app não
+mostra aviso.
 
 ## Pipeline
 
@@ -101,7 +117,8 @@ gate de harmonicidade.
 2. **Filtros temporais e histereses** — concluída.
 3. **Análise espectral**: FFT, correção de oitava, refinamento harmônico,
    harmonicidade — concluída.
-4. Captura real (`AudioInput`), isolate e gravações de referência.
+4. **Captura real** (`record`), DSP em isolate, build Android no CI —
+   concluída no código; **sem validação em aparelho**.
 5. Calibração dos parâmetros com áudio real.
 
 ## Resultados da fase 1 — YIN

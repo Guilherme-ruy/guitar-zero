@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guitar_zero/core/audio/audio_input.dart';
 import 'package:guitar_zero/core/music/tuning.dart';
@@ -49,4 +51,28 @@ void main() {
     expect(controller.status, TunerStatus.permissionDenied);
     controller.dispose();
   });
+
+  test('stop durante o start (ex.: app pausado no pedido de permissão) '
+      'não deixa o engine rodando', () async {
+    final engine = _SlowStartEngine();
+    final controller = TunerController(engine);
+    final starting = controller.start();
+    await controller.stop();
+    engine.finishStart.complete();
+    await starting;
+    expect(controller.status, TunerStatus.idle);
+    expect(engine.stops, 2);
+    controller.dispose();
+  });
+}
+
+class _SlowStartEngine extends FakeTunerEngine {
+  final Completer<void> finishStart = Completer<void>();
+  int stops = 0;
+
+  @override
+  Future<void> start() => finishStart.future;
+
+  @override
+  Future<void> stop() async => stops++;
 }

@@ -24,6 +24,9 @@ class TunerController extends ChangeNotifier {
   final Set<GuitarString> _tunedStrings = {};
   bool _disposed = false;
 
+  /// Incrementado a cada start/stop, para detectar chamadas sobrepostas.
+  int _session = 0;
+
   Tuning get tuning => _engine.config.tuning;
 
   TunerStatus get status => _status;
@@ -42,12 +45,20 @@ class TunerController extends ChangeNotifier {
     if (_status == TunerStatus.listening || _status == TunerStatus.starting) {
       return;
     }
+    final session = ++_session;
     _setStatus(TunerStatus.starting);
     _subscription ??= _engine.readings.listen(_onReading);
     try {
       await _engine.start();
+      if (session != _session) {
+        // stop() foi chamado enquanto aguardávamos (ex.: app foi para
+        // segundo plano durante o pedido de permissão).
+        await _engine.stop();
+        return;
+      }
       _setStatus(TunerStatus.listening);
     } on AudioInputException catch (e) {
+      if (session != _session) return;
       _setStatus(switch (e.failure) {
         AudioInputFailure.permissionDenied => TunerStatus.permissionDenied,
         AudioInputFailure.unavailable => TunerStatus.unavailable,
@@ -56,6 +67,7 @@ class TunerController extends ChangeNotifier {
   }
 
   Future<void> stop() async {
+    _session++;
     await _engine.stop();
     _reading = null;
     _setStatus(TunerStatus.idle);

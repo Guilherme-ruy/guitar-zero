@@ -75,18 +75,31 @@ class _TunerScreenState extends State<TunerScreen> with WidgetsBindingObserver {
                     isDemo: widget.isDemo,
                   ),
                   const Spacer(),
-                  NoteDisplay(
-                    note: _controller.activeString?.note,
-                    frequency: reading?.frequency,
-                    cents: reading?.cents,
-                  ),
-                  const SizedBox(height: 28),
-                  ZeroMeter(
-                    cents: reading?.cents,
-                    isInTune: reading?.isInTune ?? false,
+                  // Leitura mantida após o som acabar (hold): atenuada.
+                  AnimatedOpacity(
+                    duration: GzDurations.state,
+                    opacity: reading?.isHeld ?? false ? 0.45 : 1,
+                    child: Column(
+                      children: [
+                        NoteDisplay(
+                          note: _controller.activeString?.note,
+                          frequency: reading?.frequency,
+                          cents: reading?.cents,
+                        ),
+                        const SizedBox(height: 28),
+                        ZeroMeter(
+                          cents: reading?.cents,
+                          isInTune: reading?.isInTune ?? false,
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 20),
-                  TunerHint(status: _controller.status, reading: reading),
+                  TunerHint(
+                    status: _controller.status,
+                    reading: reading,
+                    onRetry: _controller.start,
+                  ),
                   const Spacer(),
                   Expanded(
                     flex: 3,

@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guitar_zero/app/app.dart';
+import 'package:guitar_zero/core/audio/audio_input.dart';
 import 'package:guitar_zero/core/music/tuning.dart';
 import 'package:guitar_zero/core/tuner/simulated_tuner_engine.dart';
 import 'package:guitar_zero/core/tuner/tuner_reading.dart';
@@ -63,5 +64,46 @@ void main() {
     expect(find.textContaining('Hz'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
     await tester.pump();
+  });
+
+  testWidgets('microfone negado: mensagem e "Tentar novamente"', (
+    tester,
+  ) async {
+    final engine = FakeTunerEngine()
+      ..failOnStart = const AudioInputException(
+        AudioInputFailure.permissionDenied,
+      );
+    await tester.pumpWidget(GuitarZeroApp(engine: engine));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Permita o acesso ao microfone para afinar'),
+      findsOneWidget,
+    );
+
+    engine.failOnStart = null;
+    await tester.tap(find.text('Tentar novamente'));
+    await tester.pumpAndSettle();
+    expect(find.text('Toque qualquer corda'), findsOneWidget);
+  });
+
+  testWidgets('leitura em hold mostra a nota, mas pede nova palhetada', (
+    tester,
+  ) async {
+    final engine = FakeTunerEngine();
+    await tester.pumpWidget(GuitarZeroApp(engine: engine));
+    await tester.pump();
+    engine.emit(
+      TunerReading(
+        frequency: 110,
+        confidence: 1,
+        string: Tuning.standard.strings[1],
+        cents: 2,
+        isInTune: true,
+        isHeld: true,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('110.0 Hz'), findsOneWidget);
+    expect(find.text('Toque qualquer corda'), findsOneWidget);
   });
 }

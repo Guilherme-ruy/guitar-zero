@@ -59,8 +59,16 @@ Artigos de referência:
 
 ## Dependências de pacotes
 
-Dependências de runtime: apenas o SDK Flutter (BSD-3-Clause).
-Dependências de desenvolvimento: `flutter_lints` (BSD-3-Clause).
+| Pacote | Licença | Uso |
+| --- | --- | --- |
+| Flutter SDK | BSD-3-Clause | Framework |
+| [`record`](https://pub.dev/packages/record) 7.1.1 (+ `record_platform_interface`, `record_android`, `record_ios`, `record_linux`, `record_macos`, `record_web`, `record_windows`) | BSD-3-Clause (© 2022 openapi4j authors) | Captura PCM do microfone; só `lib/platform/record_pcm_recorder.dart` importa o plugin |
+| `plugin_platform_interface` (transitiva) | BSD-3-Clause (© The Flutter Authors) | Interface de plugins |
+| `web` (transitiva) | BSD-3-Clause (© Dart project authors) | Usada pelo `record_web`; não incluída no app Android/iOS |
+| `flutter_lints` (dev) | BSD-3-Clause | Lint |
 
-As licenças das dependências Flutter/Dart são exibidas automaticamente pelo
-`LicenseRegistry` do Flutter e podem ser expostas em uma tela "Sobre" futura.
+O plugin `record` declara apenas `RECORD_AUDIO` no Android (sem `INTERNET`;
+verificado no CI sobre o APK release).
+
+As licenças das dependências são registradas automaticamente pelo
+`LicenseRegistry` do Flutter e podem ser exibidas por `showLicensePage`.

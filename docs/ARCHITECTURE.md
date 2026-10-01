@@ -9,7 +9,12 @@ TunerController (ChangeNotifier)  lib/features/tuner/tuner_controller.dart
    ↓ depende só da interface; recebe TunerReading
 TunerEngine (interface)           lib/core/tuner/tuner_engine.dart
    ↓ implementação PitchTunerEngine compõe:
-AudioInput (interface)            lib/core/audio/          captura PCM + timestamp
+AudioInput (interface)            lib/core/audio/          frames + timestamp
+  MicrophoneAudioInput              PcmRecorder → PcmFramer (frames sobrepostos)
+  RecordPcmRecorder               lib/platform/            plugin `record` (único import de plugin)
+FrameProcessor                    lib/core/tuner/          onde o DSP roda:
+  IsolateFrameProcessor             isolate dedicado (app), com backpressure
+  InlineFrameProcessor              mesmo isolate (testes)
 PitchDetector                     lib/core/dsp/
   HarmonicPitchDetector             YIN (semente) + HarmonicAnalyzer (FFT,
                                     oitava, refinamento, harmonicidade)
@@ -32,6 +37,7 @@ Regra de dependência: `core/` não importa Flutter (exceto `dart:` e
 | `lib/core/tuner/` | Engine que orquestra o pipeline e produz `TunerReading` |
 | `lib/features/tuner/` | Controller e widgets da tela do afinador |
 | `tool/` | Relatório de caracterização e benchmark do detector (fora do CI) |
+| `lib/platform/` | Adaptadores de plugins (hoje só `record`) |
 | `lib/main.dart` | Composition root: único lugar que escolhe implementações concretas |
 
 ## Fluxo de dados
@@ -56,13 +62,17 @@ YIN, filtros, octave guard nem histereses.
 
 ## Pontos de extensão
 
-- **Áudio nativo**: uma implementação de `AudioInput` via plugin ou platform
-  channel (Android `AudioRecord`, iOS `AVAudioEngine`). Nada acima muda.
+- **Áudio nativo**: trocar o plugin por platform channel (Android
+  `AudioRecord`, iOS `AVAudioEngine`) é implementar outro `PcmRecorder`.
+  Framer, engine e UI não mudam.
 - **Engine nativo inteiro**: se o DSP em Dart não for suficiente, outra
   implementação de `TunerEngine` pode delegar tudo ao nativo e emitir
   `TunerReading`. Controller e UI não mudam.
-- **Isolate**: `PitchDetector` é síncrono e sem I/O justamente para poder rodar
-  em um isolate dentro do engine, se o custo de CPU exigir.
+- **Isolate**: `PitchDetector` e `TunerPipeline` são síncronos e sem I/O; o
+  `IsolateFrameProcessor` os executa num isolate dedicado. No máximo um frame
+  em processamento e um pendente (o mais recente substitui o anterior);
+  resultados anteriores a um reset/stop são descartados por um contador de
+  geração; uma exceção no detector vira "silêncio" em vez de travar o worker.
 - **Novas afinações / instrumentos**: `Tuning` é dado; `StringMatcher` é genérico.
 
 ## Ciclo de vida e privacidade
@@ -76,7 +86,8 @@ YIN, filtros, octave guard nem histereses.
 
 ## Estado atual
 
-`main.dart` usa `SimulatedTunerEngine` (selo DEMO na tela) porque ainda não
-existe `AudioInput` concreto. O `YinPitchDetector` (Dart puro) já existe e é
-testado, inclusive dentro do `PitchTunerEngine`. `PitchTunerEngine` já está
+`main.dart` usa o microfone real: `MicrophoneAudioInput(RecordPcmRecorder)` +
+`IsolateFrameProcessor` (`HarmonicPitchDetector` + `TunerPipeline`). Com
+`--dart-define=GUITAR_ZERO_DEMO=true`, usa o `SimulatedTunerEngine`. A
+captura ainda não foi validada em aparelho. `PitchTunerEngine` já está
 implementado e testado com fakes.
