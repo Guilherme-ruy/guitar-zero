@@ -5,13 +5,13 @@ import '../../../core/music/note.dart';
 import '../../preferences/tuner_preferences.dart';
 import '../note_names.dart';
 
-/// Nota alvo em destaque, com frequência e desvio detectados.
+/// Nota alvo em destaque e frequência detectada. O desvio aparece só no
+/// medidor (ponteiro e cor), sem número de cents.
 class NoteDisplay extends StatelessWidget {
   const NoteDisplay({
     super.key,
     required this.note,
     required this.frequency,
-    required this.cents,
     this.naming = NoteNaming.letters,
     this.compact = false,
   });
@@ -24,7 +24,6 @@ class NoteDisplay extends StatelessWidget {
 
   /// Frequência detectada, ou `null` quando nada está soando.
   final double? frequency;
-  final double? cents;
   final NoteNaming naming;
 
   @override
@@ -80,38 +79,11 @@ class NoteDisplay extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-        // Encolhe se faltar largura (telas estreitas, fonte grande).
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                sounding ? '${frequency!.toStringAsFixed(1)} Hz' : '— Hz',
-                style: theme.titleMedium!.copyWith(
-                  color: GzColors.textSecondary,
-                ),
-              ),
-              if (sounding) ...[
-                const SizedBox(width: 12),
-                Text(
-                  _formatCents(cents!),
-                  style: theme.titleMedium!.copyWith(
-                    color: GzColors.forCents(cents!),
-                  ),
-                ),
-              ],
-            ],
-          ),
+        Text(
+          sounding ? '${frequency!.toStringAsFixed(1)} Hz' : '— Hz',
+          style: theme.titleMedium!.copyWith(color: GzColors.textSecondary),
         ),
       ],
     );
-  }
-
-  static String _formatCents(double cents) {
-    final rounded = cents.round();
-    if (rounded == 0) return '0 cents';
-    final sign = rounded > 0 ? '+' : '−';
-    return '$sign${rounded.abs()} cents';
   }
 }

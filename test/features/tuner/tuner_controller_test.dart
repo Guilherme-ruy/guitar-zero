@@ -19,7 +19,10 @@ TunerReading _reading(int stringIndex, double cents) => TunerReading(
 void main() {
   test('start → listening; leituras atualizam o estado', () async {
     final engine = FakeTunerEngine();
-    final controller = TunerController(engine);
+    final controller = TunerController(
+      engine,
+      resultLinger: const Duration(milliseconds: 50),
+    );
     await controller.start();
     expect(controller.status, TunerStatus.listening);
 
@@ -32,7 +35,12 @@ void main() {
     expect(controller.tunedStrings, {Tuning.standard.strings[1]});
 
     engine.emit(null);
+    // Logo após o som: o último resultado continua visível, atenuado.
+    expect(controller.reading!.isHeld, isTrue);
+    expect(controller.reading!.cents, 2);
+    await Future<void>.delayed(const Duration(milliseconds: 80));
     expect(controller.reading, isNull);
+    expect(controller.lastResult!.cents, 2);
     expect(
       controller.activeString,
       Tuning.standard.strings[1],

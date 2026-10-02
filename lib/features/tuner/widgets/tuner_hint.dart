@@ -14,9 +14,16 @@ class TunerHint extends StatelessWidget {
     required this.status,
     required this.reading,
     this.onRetry,
+    this.lastResult,
+    this.allStringsTuned = false,
     this.manualString,
     this.naming = NoteNaming.letters,
   });
+
+  /// Último resultado ao vivo (persiste após o som), para a instrução de
+  /// espera dizer o que fazer a seguir em vez de recomeçar do zero.
+  final TunerReading? lastResult;
+  final bool allStringsTuned;
 
   /// Corda escolhida no modo manual (muda a instrução de espera).
   final GuitarString? manualString;
@@ -70,21 +77,32 @@ class TunerHint extends StatelessWidget {
       case TunerStatus.unavailable:
         return ('Microfone indisponível', GzColors.off);
       case TunerStatus.listening:
+        // Leitura atual ou mantida após o som (o controller a segura por
+        // alguns segundos): o veredito não some na pausa entre palhetadas.
         final r = reading;
-        if (r == null || r.isHeld) {
-          final manual = manualString;
+        if (r != null) {
+          if (r.isInTune) return ('Afinada', GzColors.zero);
+          return r.cents < 0
+              ? ('Baixa — suba a afinação', GzColors.textPrimary)
+              : ('Alta — desça a afinação', GzColors.textPrimary);
+        }
+        final manual = manualString;
+        if (manual != null) {
           return (
-            manual == null
-                ? 'Toque qualquer corda'
-                : 'Toque a corda ${naming.primary(manual.note)} '
-                      '(${manual.number}ª)',
+            'Toque a corda ${naming.primary(manual.note)} (${manual.number}ª)',
             GzColors.textSecondary,
           );
         }
-        if (r.isInTune) return ('Afinada', GzColors.zero);
-        return r.cents < 0
-            ? ('Baixa — suba a afinação', GzColors.textPrimary)
-            : ('Alta — desça a afinação', GzColors.textPrimary);
+        if (allStringsTuned) {
+          return ('Todas as cordas afinadas', GzColors.zero);
+        }
+        final last = lastResult;
+        if (last == null) {
+          return ('Toque uma corda para começar', GzColors.textSecondary);
+        }
+        return last.isInTune
+            ? ('Toque a próxima corda', GzColors.textSecondary)
+            : ('Ajuste e toque a corda de novo', GzColors.textSecondary);
     }
   }
 }

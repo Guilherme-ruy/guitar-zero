@@ -19,7 +19,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('GUITAR ZERO'), findsOneWidget);
-    expect(find.text('Toque qualquer corda'), findsOneWidget);
+    expect(find.text('Toque uma corda para começar'), findsOneWidget);
     expect(find.text('DEMO'), findsNothing);
     // As seis cordas da afinação Standard.
     expect(find.text('E'), findsNWidgets(2));
@@ -44,7 +44,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('107.5 Hz'), findsOneWidget);
-    expect(find.text('−40 cents'), findsOneWidget);
+    expect(find.textContaining('cents'), findsNothing);
     expect(find.text('Baixa — suba a afinação'), findsOneWidget);
 
     engine.emit(
@@ -87,28 +87,68 @@ void main() {
     engine.failOnStart = null;
     await tester.tap(find.text('Tentar novamente'));
     await tester.pumpAndSettle();
-    expect(find.text('Toque qualquer corda'), findsOneWidget);
+    expect(find.text('Toque uma corda para começar'), findsOneWidget);
   });
 
-  testWidgets('leitura em hold mostra a nota, mas pede nova palhetada', (
+  testWidgets('após o som, o veredito fica alguns segundos e depois orienta', (
     tester,
   ) async {
     final engine = FakeTunerEngine();
     await tester.pumpWidget(GuitarZeroApp(engine: engine));
     await tester.pump();
-    engine.emit(
-      TunerReading(
-        frequency: 110,
-        confidence: 1,
-        string: Tuning.standard.strings[1],
-        cents: 2,
-        isInTune: true,
-        isHeld: true,
-      ),
+    final a2 = Tuning.standard.strings[1];
+    TunerReading at(double cents, {bool held = false}) => TunerReading(
+      frequency: 110,
+      confidence: 1,
+      string: a2,
+      cents: cents,
+      isInTune: cents.abs() < 3,
+      isHeld: held,
     );
-    await tester.pumpAndSettle();
+
+    engine.emit(at(-40));
+    await tester.pump();
+    engine.emit(at(-40, held: true));
+    await tester.pump(const Duration(milliseconds: 500));
+    engine.emit(null);
+    await tester.pump(const Duration(seconds: 2));
+    // Pausa curta: continua dizendo o que fazer, sem voltar ao início.
+    expect(find.text('Baixa — suba a afinação'), findsOneWidget);
     expect(find.text('110.0 Hz'), findsOneWidget);
-    expect(find.text('Toque qualquer corda'), findsOneWidget);
+
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+    expect(find.text('Ajuste e toque a corda de novo'), findsOneWidget);
+    expect(find.text('110.0 Hz'), findsNothing);
+
+    engine.emit(at(0.5));
+    await tester.pump();
+    engine.emit(null);
+    await tester.pump(const Duration(seconds: 6));
+    await tester.pumpAndSettle();
+    expect(find.text('Toque a próxima corda'), findsOneWidget);
+  });
+
+  testWidgets('todas as cordas afinadas', (tester) async {
+    final engine = FakeTunerEngine();
+    await tester.pumpWidget(GuitarZeroApp(engine: engine));
+    await tester.pump();
+    for (final s in Tuning.standard.strings) {
+      engine.emit(
+        TunerReading(
+          frequency: s.targetFrequency,
+          confidence: 1,
+          string: s,
+          cents: 0,
+          isInTune: true,
+        ),
+      );
+      await tester.pump();
+    }
+    engine.emit(null);
+    await tester.pump(const Duration(seconds: 6));
+    await tester.pumpAndSettle();
+    expect(find.text('Todas as cordas afinadas'), findsOneWidget);
   });
 
   testWidgets('toque longo no logo abre e fecha o diagnóstico', (tester) async {
@@ -153,7 +193,7 @@ void main() {
       await tester.tap(find.byType(Switch));
       await tester.pump();
       expect(engine.target, isNull);
-      expect(find.text('Toque qualquer corda'), findsOneWidget);
+      expect(find.text('Toque uma corda para começar'), findsOneWidget);
     });
   });
 

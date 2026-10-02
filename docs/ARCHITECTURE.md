@@ -76,12 +76,35 @@ isolate.
 
 ## Visual do instrumento
 
-`HeadstockGeometry` define, em unidades de projeto (100 × 160), o contorno,
-tarraxas, pinos, nut e a posição dos botões de cada corda. `HeadstockPainter`
-(desenho) e `HeadstockView` (botões) usam a mesma geometria, então não se
-desalinham. Sem imagens: escala para qualquer tela. O tamanho dos botões é
-limitado pelo espaçamento real entre tarraxas (30–48 dp), e o layout é
-testado em 360×640, 375×667, 390×844 e 412×915 sem estouro nem sobreposição.
+Imagens WebP em `assets/instruments/` (1x/2x/3x, CC0, geradas para o
+projeto). `HeadstockLayout` guarda as coordenadas normalizadas (0–1 sobre a
+imagem inteira) das chaves e dos botões, copiadas dos JSONs que acompanham
+as imagens; um teste garante que continuam iguais. `HeadstockView` encaixa a
+imagem (contain, ancorada embaixo, margem lateral de 32 dp para os botões
+poderem sair do retângulo) e posiciona botões e conectores no mesmo
+retângulo. Guitarra com imagem abaixo de 500 dp usa a coluna compacta de
+botões. A imagem não muda com a corda ativa: só os botões. Botões de
+30–48 dp, limitados pela distância ao vizinho; layout testado em 360×640,
+375×667, 390×844 e 412×915 sem estouro nem sobreposição.
+
+## Instrução e resultado na tela
+
+O pipeline mantém a leitura por 700 ms (`SilenceHold`). Na UI, o
+`TunerController` segura o último resultado ao vivo por mais 5 s
+(`resultLinger`), atenuado: a pausa entre girar a tarraxa e tocar de novo
+não apaga o resultado nem troca o texto. Textos:
+
+| Situação | Texto |
+| --- | --- |
+| abrindo o microfone | Preparando o microfone… |
+| sem permissão / falha | Permita o acesso ao microfone… / Microfone indisponível (+ Tentar novamente) |
+| tocando ou até 5 s depois | Baixa — suba a afinação · Alta — desça a afinação · Afinada |
+| manual, sem som | Toque a corda Mi (6ª) |
+| automático, nada tocado ainda | Toque uma corda para começar |
+| automático, último resultado afinado | Toque a próxima corda |
+| automático, último resultado fora | Ajuste e toque a corda de novo |
+| todas as cordas já afinadas | Todas as cordas afinadas |
+| app em segundo plano | Afinador pausado |
 
 ## Pontos de extensão
 

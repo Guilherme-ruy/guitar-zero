@@ -13,13 +13,24 @@ enum TunerStatus { idle, starting, listening, permissionDenied, unavailable }
 /// Estado de apresentação do afinador. Faz a ponte entre o [TunerEngine] e
 /// os widgets, que apenas leem este estado.
 class TunerController extends ChangeNotifier {
-  TunerController(this._engine);
+  TunerController(
+    this._engine, {
+    this.resultLinger = const Duration(seconds: 5),
+  });
 
   final TunerEngine _engine;
+
+  /// Por quanto tempo a última leitura continua na tela (atenuada, como
+  /// `isHeld`) depois que o som acaba. Cobre a pausa natural entre girar a
+  /// tarraxa e tocar de novo, sem a instrução ficar alternando.
+  final Duration resultLinger;
+  Timer? _lingerTimer;
   StreamSubscription<TunerReading?>? _subscription;
 
   TunerStatus _status = TunerStatus.idle;
   TunerReading? _reading;
+  TunerReading? _lastResult;
+  bool _lingering = false;
   GuitarString? _activeString;
   final Set<GuitarString> _tunedStrings = {};
   bool _disposed = false;
@@ -31,8 +42,20 @@ class TunerController extends ChangeNotifier {
 
   TunerStatus get status => _status;
 
-  /// Leitura atual, ou `null` se nenhuma nota está soando.
-  TunerReading? get reading => _reading;
+  /// Leitura a exibir: a atual ou, até [resultLinger] após o som acabar, a
+  /// última leitura ao vivo marcada como `isHeld`. `null` quando não há nada.
+  TunerReading? get reading {
+    final r = _reading;
+    if (r != null && !r.isHeld) return r;
+    return _lingering ? _lastResult!.copyWith(isHeld: true) : r;
+  }
+
+  /// Última leitura ao vivo desde o início ou a última troca de modo/corda.
+  /// Continua disponível depois de [resultLinger] para orientar a instrução.
+  TunerReading? get lastResult => _lastResult;
+
+  /// `true` quando todas as cordas da afinação já ficaram afinadas.
+  bool get allStringsTuned => tuning.strings.every(_tunedStrings.contains);
 
   /// Corda em destaque: no manual, a escolhida; no automático, a última
   /// detectada (permanece durante o silêncio para a interface não piscar).
@@ -59,6 +82,7 @@ class TunerController extends ChangeNotifier {
     _engine.setTargetString(string);
     if (string != null) _activeString = string;
     _reading = null;
+    _clearResult();
     notifyListeners();
   }
 
@@ -97,6 +121,7 @@ class TunerController extends ChangeNotifier {
     _session++;
     await _engine.stop();
     _reading = null;
+    _clearResult();
     _setStatus(TunerStatus.idle);
   }
 
@@ -107,6 +132,7 @@ class TunerController extends ChangeNotifier {
     _session++;
     unawaited(_engine.stop());
     _reading = null;
+    _clearResult();
     _setStatus(
       error is AudioInputException &&
               error.failure == AudioInputFailure.permissionDenied
@@ -118,13 +144,26 @@ class TunerController extends ChangeNotifier {
   void _onReading(TunerReading? reading) {
     if (_disposed) return;
     _reading = reading;
-    if (reading != null) {
+    if (reading != null && !reading.isHeld) {
       if (reading.string != _activeString) {
         _activeString = reading.string;
       }
       if (reading.isInTune) _tunedStrings.add(reading.string);
+      _lastResult = reading;
+      _lingering = true;
+      _lingerTimer?.cancel();
+      _lingerTimer = Timer(resultLinger, () {
+        _lingering = false;
+        if (!_disposed) notifyListeners();
+      });
     }
     notifyListeners();
+  }
+
+  void _clearResult() {
+    _lingerTimer?.cancel();
+    _lastResult = null;
+    _lingering = false;
   }
 
   void _setStatus(TunerStatus status) {
@@ -136,6 +175,7 @@ class TunerController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _lingerTimer?.cancel();
     unawaited(_subscription?.cancel());
     unawaited(_engine.dispose());
     super.dispose();

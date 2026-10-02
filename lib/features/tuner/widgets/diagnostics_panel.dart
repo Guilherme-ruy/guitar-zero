@@ -2,14 +2,18 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme.dart';
 import '../../../core/tuner/tuner_diagnostics.dart';
+import '../../../core/tuner/tuner_reading.dart';
 
 /// Painel de diagnóstico (oculto; aberto com toque longo no logo). Serve
 /// para calibrar o DSP em aparelhos reais: um print desta tela traz os
 /// números relevantes.
 class DiagnosticsPanel extends StatelessWidget {
-  const DiagnosticsPanel({super.key, required this.diagnostics});
+  const DiagnosticsPanel({super.key, required this.diagnostics, this.reading});
 
   final Stream<TunerDiagnostics> diagnostics;
+
+  /// Leitura exibida (após os filtros): o desvio em cents só aparece aqui.
+  final TunerReading? reading;
 
   @override
   Widget build(BuildContext context) {
@@ -34,14 +38,14 @@ class DiagnosticsPanel extends StatelessWidget {
             ),
             child: d == null
                 ? const Text('diagnóstico: aguardando áudio…')
-                : Text(_format(d)),
+                : Text(_format(d, reading)),
           );
         },
       ),
     );
   }
 
-  static String _format(TunerDiagnostics d) {
+  static String _format(TunerDiagnostics d, TunerReading? r) {
     final e = d.estimate;
     final ms = d.processingTime.inMicroseconds / 1000;
     final rms = d.rmsDb;
@@ -53,7 +57,10 @@ class DiagnosticsPanel extends StatelessWidget {
           : 'f ${e.frequencyHz.toStringAsFixed(2)} Hz'
                 ' · per ${e.periodicity.toStringAsFixed(2)}'
                 ' · harm ${e.harmonicity?.toStringAsFixed(2) ?? '—'}',
-      'RMS ${rms == null ? '—' : '${rms.toStringAsFixed(0)} dB'}',
+      'RMS ${rms == null ? '—' : '${rms.toStringAsFixed(0)} dB'}'
+          ' · leitura ${r == null ? '—' : '${r.string.note} '
+                    '${r.cents >= 0 ? '+' : ''}${r.cents.toStringAsFixed(1)} c'
+                    '${r.isHeld ? ' (mantida)' : ''}'}',
     ].join('\n');
   }
 }

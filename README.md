@@ -13,10 +13,13 @@ A primeira versão é só um afinador, muito bem feito:
   B3 246.94 · E4 329.63 Hz;
 - identificação automática da corda (**AUTO**) ou escolha manual tocando na
   corda; só o switch volta ao automático;
-- headstock de **violão** (3+3) ou **guitarra** (6 em linha) desenhado em
-  vetor, ou visual **minimalista**;
+- headstock de **violão** (3+3) ou **guitarra** (6 em linha) em imagem
+  própria, ou visual **minimalista**; só os botões das notas indicam a corda;
 - nomes das notas em letras (E A D), solfejo (Mi Lá Ré) ou ambos;
-- indicação de abaixo/acima em cents e feedback visual quando afinada.
+- medidor de abaixo/acima e feedback visual quando afinada (o número em
+  cents fica só no painel de diagnóstico);
+- instrução que não pisca: o último resultado fica na tela por 5 s depois
+  que o som acaba, e então diz o próximo passo.
 
 Fora de escopo nesta versão: login, backend, banco de dados, analytics,
 anúncios, metrônomo, acordes, afinações alternativas, recursos sociais.

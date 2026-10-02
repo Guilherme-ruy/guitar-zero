@@ -60,6 +60,15 @@ Artigos de referência:
 - D. Grandke. *Interpolation Algorithms for Discrete Fourier Transforms of
   Weighted Signals*. IEEE Trans. Instrum. Meas. 32(2), 1983.
 
+## Imagens
+
+Headstocks (`assets/instruments/`) e logo (`assets/branding/`) foram gerados
+para o Guitar Zero (ImageGen), sem imagens de fabricantes como entrada, e
+publicados como **CC0-1.0**. Origem, prompts e referências visuais
+consultadas estão nos `README.md`/`generation-prompts.md` de cada pasta. O
+ícone Android (`android/app/src/main/res/mipmap-*`) é derivado da logo de
+1024 px. Nenhum asset do GuitarTuna é usado.
+
 ## Dados de teste
 
 | Dados | Licença | Uso |

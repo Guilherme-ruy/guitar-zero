@@ -20,3 +20,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  # Só as imagens base; o Flutter inclui as variantes 2.0x/ e 3.0x/.
+  assets:
+    - assets/instruments/acoustic_headstock.webp
+    - assets/instruments/electric_headstock.webp

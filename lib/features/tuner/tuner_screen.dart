@@ -103,7 +103,10 @@ class _TunerScreenState extends State<TunerScreen> with WidgetsBindingObserver {
                   ),
                   if (_showDiagnostics) ...[
                     const SizedBox(height: 8),
-                    DiagnosticsPanel(diagnostics: widget.engine.diagnostics),
+                    DiagnosticsPanel(
+                      diagnostics: widget.engine.diagnostics,
+                      reading: reading,
+                    ),
                   ],
                   const Spacer(),
                   // Leitura mantida após o som acabar (hold): atenuada.
@@ -115,7 +118,6 @@ class _TunerScreenState extends State<TunerScreen> with WidgetsBindingObserver {
                         NoteDisplay(
                           note: _controller.activeString?.note,
                           frequency: reading?.frequency,
-                          cents: reading?.cents,
                           naming: prefs.noteNaming,
                           // Telas baixas: mais altura para o instrumento.
                           compact: MediaQuery.sizeOf(context).height < 720,
@@ -132,6 +134,8 @@ class _TunerScreenState extends State<TunerScreen> with WidgetsBindingObserver {
                   TunerHint(
                     status: _controller.status,
                     reading: reading,
+                    lastResult: _controller.lastResult,
+                    allStringsTuned: _controller.allStringsTuned,
                     onRetry: _controller.start,
                     manualString: manual,
                     naming: prefs.noteNaming,
