@@ -9,7 +9,7 @@ sem PHP, framework, build, fontes externas, cookies, analytics ou CDNs.
 1. Faça backup dos arquivos existentes na pasta do domínio.
 2. Extraia o ZIP do site e envie **seu conteúdo** para `public_html`, ou para a
    pasta pública vinculada ao domínio. `index.html`, `privacidade.html`,
-   `styles.css`, `motion.js` e `assets/` precisam ficar no mesmo nível.
+   `styles.css`, `motion.js`, `assets/` e `vendor/` precisam ficar no mesmo nível.
 3. Mantenha HTTPS ativo. Acesse o site e teste o link de privacidade.
 
 Funciona também em subpastas; todos os caminhos são relativos. Não exige
@@ -24,25 +24,43 @@ de logs da hospedagem. O app também deve oferecer acesso à política.
 
 ## Hero e movimento
 
-`motion.js` aproxima o indicador de −32 cents até zero conforme a rolagem,
-com uma leve rotação da imagem e mudança de laranja para verde. É uma
-demonstração visual, sem microfone, som, gravação ou requisição de rede.
-Usa rolagem nativa, listener passivo e `requestAnimationFrame`, sem GSAP.
+`motion.js` usa GSAP + ScrollTrigger 3.15.0 para avançar e retornar uma
+sequência de 70 imagens WebP conforme a rolagem. O medidor acompanha o giro,
+de −32 cents até zero, com mudança de laranja para verde. É uma demonstração
+visual, sem acesso ao microfone ou reprodução de áudio.
 
-A animação só fixa a hero quando ela cabe na altura da tela. Com movimento
-reduzido, economia de dados ou JavaScript desativado, exibe uma hero estática
-afinada, sem espaço extra. O conteúdo e os links continuam funcionando.
+As bibliotecas foram obtidas da distribuição npm no jsDelivr e copiadas para
+`vendor/`, com versão fixa e cabeçalhos originais preservados. O navegador
+carrega tudo da própria hospedagem, sem chamadas à CDN. Licença e origem em
+`vendor/README.md` e checksums em `vendor/sources.json`.
+
+O canvas usa a sequência de 480 px no celular (468 KB) ou de 864 px em telas
+maiores (1,06 MB). São no máximo três requisições simultâneas, com prioridade
+para o frame atual e os vizinhos. A memória de frames decodificados é limitada
+a oito imagens no celular e doze em telas maiores; bitmaps antigos são
+liberados. Frames carregados podem ser reutilizados pelo cache HTTP.
+
+A animação inicia automaticamente em todas as versões, inclusive quando o
+sistema informa movimento reduzido, conforme a escolha do proprietário.
+A hero fica fixa quando cabe na altura da tela. Em janelas mais curtas,
+continua animando no fluxo normal, sem fixar nem bloquear a rolagem.
+JavaScript desativado ou recursos indisponíveis mantêm o pôster estático;
+o conteúdo e os links continuam funcionando. Sirva por HTTP/HTTPS; o canvas
+usa fetch para arquivos locais, então abrir o HTML por `file://` mantém o pôster.
 
 Para visualizar localmente: `python -m http.server 8080 --directory site`
 a partir da raiz do repositório; abra `http://localhost:8080`.
 
 ## Arte e edição
 
-- `assets/headstock-600.webp` e `headstock-960.webp`: nova arte original das
-  tarraxas, gerada com a ferramenta integrada do Codex. Prompt e processo em
-  `assets/HERO_GENERATION.md`. Transparência nativa, WebP de qualidade 82.
+- `assets/hero-sequence/`: frames derivados do vídeo gerado no Gemini e enviado
+  pelo proprietário. Medidas e conversão no README/manifest dessa pasta;
+  pôster estático de boa qualidade. O vídeo MP4 original e seu áudio não entram
+  no site. O fundo claro é integrado à página pelo CSS, sem alterar os pixels.
 - As duas ilustrações menores reaproveitam as imagens aprovadas do app.
-  Favicon também deriva da logo aprovada. Licença CC0 em `assets/LICENSE.txt`.
+  Favicon também deriva da logo aprovada. A dedicação CC0 em
+  `assets/LICENSE.txt` cobre essas ilustrações; os derivados do vídeo e o GSAP
+  têm suas próprias notas de origem/condições.
 - A marca do site é SVG inline + tipografia de sistema; não muda o ícone do app.
 - Edite os textos nos HTML e as cores/medidas em `styles.css`.
 - As duas lojas aparecem como botões desativados com “Em breve”. No lançamento,

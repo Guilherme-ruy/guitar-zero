@@ -8,6 +8,8 @@
   <title>Guitar Zero — Encontre seu zero.</title>
   <link rel="icon" href="assets/icon-96.png" type="image/png">
   <link rel="stylesheet" href="styles.css">
+  <script src="vendor/gsap.min.js" defer></script>
+  <script src="vendor/ScrollTrigger.min.js" defer></script>
   <script src="motion.js" defer></script>
 </head>
 <body>
@@ -23,13 +25,12 @@
     <section class="hero" aria-labelledby="hero-title">
       <div class="hero-stage wrap">
         <div class="hero-copy">
-          <h1 id="hero-title">Encontre<br>seu <span>zero.</span></h1>
+          <h1 id="hero-title">Encontre <br>seu <span>zero.</span></h1>
           <p>Seu violão. Sua guitarra.<br class="mobile-break"> Na afinação certa.</p>
         </div>
-        <div class="hero-art" aria-hidden="true">
-          <div class="tuning-orbit"></div>
-          <img class="hero-instrument" src="assets/headstock-960.webp" srcset="assets/headstock-600.webp 600w, assets/headstock-960.webp 960w" sizes="(max-width: 600px) 100vw, 760px" width="960" height="640" alt="" fetchpriority="high" decoding="async">
-          <span class="art-note">E<span>Mi</span></span>
+        <div class="hero-art hero-sequence" aria-hidden="true">
+          <img class="hero-poster" src="assets/hero-sequence/poster.webp" width="864" height="486" alt="" fetchpriority="high" decoding="async">
+          <canvas class="hero-canvas" width="480" height="270" hidden></canvas>
         </div>
         <div class="tuning-demo" role="img" aria-label="Demonstração visual: o indicador se aproxima do zero conforme você rola a página. Não utiliza o microfone.">
           <div class="demo-reading" aria-hidden="true"><span class="demo-value">0</span><span class="demo-unit">cents</span></div>
@@ -46,7 +47,7 @@
             <span><small>Em breve</small><strong>App Store</strong></span>
           </button>
         </div>
-        <p class="scroll-hint" aria-hidden="true">Role para afinar <span>↓</span></p>
+        <p class="scroll-hint" aria-hidden="true">Role para encontrar seu zero <span>↓</span></p>
       </div>
     </section>
     <section class="how-section" id="como" aria-labelledby="how-title">
