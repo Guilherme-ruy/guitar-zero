@@ -1,0 +1,268 @@
+{
+  "schema_version": 1,
+  "instrument": "electric",
+  "tuning": "E2 A2 D3 G3 B3 E4",
+  "tuner_layout": "6-inline-left",
+  "strings_baked_in": true,
+  "coordinate_space": {
+    "origin": "top-left",
+    "x_direction": "right",
+    "y_direction": "down",
+    "units": "normalized_0_to_1",
+    "canvas_includes_transparent_gutters": true,
+    "reference_width_px": 1122,
+    "reference_height_px": 1402,
+    "measurement": "manual calibration against final generated PNG; approx ±4 source pixels"
+  },
+  "image": {
+    "asset": "electric_headstock.webp",
+    "logical_width_dp": 288,
+    "logical_height_dp": 360,
+    "fit": "contain",
+    "variants": [
+      {
+        "path": "electric_headstock.webp",
+        "density": 1,
+        "width": 288,
+        "height": 360,
+        "bytes": 20338
+      },
+      {
+        "path": "2.0x/electric_headstock.webp",
+        "density": 2,
+        "width": 576,
+        "height": 720,
+        "bytes": 56384
+      },
+      {
+        "path": "3.0x/electric_headstock.webp",
+        "density": 3,
+        "width": 864,
+        "height": 1080,
+        "bytes": 106650
+      }
+    ],
+    "source_sha256": "86a98bb4209d8754ef120e7a9f3ca123e00db0e2f071c7e187c01746334ffa06"
+  },
+  "strings": {
+    "E2": {
+      "string_number": 6,
+      "note": "E",
+      "solfege_pt": "Mi",
+      "side": "left",
+      "tuning_key_center": {
+        "x": 0.257576,
+        "y": 0.612696
+      },
+      "post_center": {
+        "x": 0.377897,
+        "y": 0.624822
+      },
+      "nut_slot": {
+        "x": 0.389483,
+        "y": 0.794579
+      },
+      "button_center": {
+        "x": 0.087576,
+        "y": 0.612696
+      },
+      "compact_button_center": {
+        "x": 0.075,
+        "y": 0.8
+      }
+    },
+    "A2": {
+      "string_number": 5,
+      "note": "A",
+      "solfege_pt": "Lá",
+      "side": "left",
+      "tuning_key_center": {
+        "x": 0.296791,
+        "y": 0.510699
+      },
+      "post_center": {
+        "x": 0.417112,
+        "y": 0.524251
+      },
+      "nut_slot": {
+        "x": 0.431373,
+        "y": 0.794579
+      },
+      "button_center": {
+        "x": 0.126791,
+        "y": 0.510699
+      },
+      "compact_button_center": {
+        "x": 0.075,
+        "y": 0.66
+      }
+    },
+    "D3": {
+      "string_number": 4,
+      "note": "D",
+      "solfege_pt": "Ré",
+      "side": "left",
+      "tuning_key_center": {
+        "x": 0.336898,
+        "y": 0.410128
+      },
+      "post_center": {
+        "x": 0.457219,
+        "y": 0.421541
+      },
+      "nut_slot": {
+        "x": 0.475936,
+        "y": 0.794579
+      },
+      "button_center": {
+        "x": 0.166898,
+        "y": 0.410128
+      },
+      "compact_button_center": {
+        "x": 0.075,
+        "y": 0.52
+      }
+    },
+    "G3": {
+      "string_number": 3,
+      "note": "G",
+      "solfege_pt": "Sol",
+      "side": "left",
+      "tuning_key_center": {
+        "x": 0.37344,
+        "y": 0.308845
+      },
+      "post_center": {
+        "x": 0.497326,
+        "y": 0.32097
+      },
+      "nut_slot": {
+        "x": 0.520499,
+        "y": 0.794579
+      },
+      "button_center": {
+        "x": 0.20344,
+        "y": 0.308845
+      },
+      "compact_button_center": {
+        "x": 0.075,
+        "y": 0.38
+      }
+    },
+    "B3": {
+      "string_number": 2,
+      "note": "B",
+      "solfege_pt": "Si",
+      "side": "left",
+      "tuning_key_center": {
+        "x": 0.414439,
+        "y": 0.2097
+      },
+      "post_center": {
+        "x": 0.538324,
+        "y": 0.218973
+      },
+      "nut_slot": {
+        "x": 0.565062,
+        "y": 0.794579
+      },
+      "button_center": {
+        "x": 0.244439,
+        "y": 0.2097
+      },
+      "compact_button_center": {
+        "x": 0.075,
+        "y": 0.24
+      }
+    },
+    "E4": {
+      "string_number": 1,
+      "note": "E",
+      "solfege_pt": "Mi",
+      "side": "left",
+      "tuning_key_center": {
+        "x": 0.456328,
+        "y": 0.107703
+      },
+      "post_center": {
+        "x": 0.573975,
+        "y": 0.138374
+      },
+      "nut_slot": {
+        "x": 0.606952,
+        "y": 0.794579
+      },
+      "button_center": {
+        "x": 0.286328,
+        "y": 0.107703
+      },
+      "compact_button_center": {
+        "x": 0.075,
+        "y": 0.1
+      }
+    }
+  },
+  "nut": {
+    "bounds": {
+      "left": 0.368093,
+      "top": 0.781027,
+      "right": 0.636364,
+      "bottom": 0.808131
+    },
+    "center": {
+      "x": 0.502228,
+      "y": 0.794579
+    },
+    "string_x": {
+      "E2": 0.389483,
+      "A2": 0.431373,
+      "D3": 0.475936,
+      "G3": 0.520499,
+      "B3": 0.565062,
+      "E4": 0.606952
+    },
+    "slot_order_left_to_right": [
+      "E2",
+      "A2",
+      "D3",
+      "G3",
+      "B3",
+      "E4"
+    ]
+  },
+  "button_safe_areas": [
+    {
+      "id": "left_gutter",
+      "bounds": {
+        "left": 0,
+        "top": 0.025,
+        "right": 0.19,
+        "bottom": 0.88
+      }
+    }
+  ],
+  "brand_wordmark": {
+    "text": "Guitar Zero",
+    "baked_in": true,
+    "style": "custom monoline handwritten signature",
+    "bounds": {
+      "left": 0.565954,
+      "top": 0.073466,
+      "right": 0.757576,
+      "bottom": 0.118402
+    },
+    "overlay_instruction": "Signature is part of the image. Do not overlay a second logo or ring on it."
+  },
+  "layout_guidance": {
+    "regular_min_rendered_image_height_dp": 500,
+    "compact_min_rendered_image_height_dp": 320,
+    "regular_visual_button_diameter_dp": 48,
+    "compact_visual_button_diameter_dp": 40,
+    "minimum_touch_target_dp": 44,
+    "compact_electric_connectors": true,
+    "allow_buttons_to_overflow_image_rect": true,
+    "external_horizontal_margin_each_side_dp": 32,
+    "safe_area_note": "Gutters identify safe pixels inside image; button hit circles may extend into surrounding empty Stack margins. Do not clip the image rectangle.",
+    "coordinate_transform": "screenX = imageLeft + x * renderedImageWidth; screenY = imageTop + y * renderedImageHeight"
+  }
+}
