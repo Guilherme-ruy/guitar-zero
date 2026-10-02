@@ -45,7 +45,18 @@ a partir da raiz do repositório; abra `http://localhost:8080`.
   Favicon também deriva da logo aprovada. Licença CC0 em `assets/LICENSE.txt`.
 - A marca do site é SVG inline + tipografia de sistema; não muda o ícone do app.
 - Edite os textos nos HTML e as cores/medidas em `styles.css`.
-- Para lançar, troque “Em breve no Android” pelo link real da Play Store.
+- As duas lojas aparecem como botões desativados com “Em breve”. No lançamento,
+  substitua o botão da loja publicada por um link para a ficha real. Os ícones
+  são símbolos locais simplificados; não são selos oficiais de download.
+
+## Site e builds do app
+
+Esta pasta não é um asset do Flutter e não entra no APK/AAB. O CI faz uma
+verificação leve e pula testes Flutter/build APK quando todos os arquivos
+alterados estão em `site/`. Alterações fora da pasta continuam disparando
+os checks do app; em pull requests, vale o conjunto completo de mudanças do
+PR. O workflow de AAB permanece manual. Não é preciso separar repositórios
+para evitar recompilar o app ao editar somente o site.
 
 A política descreve o app atual: áudio em memória, sem upload, preferências
 locais e sem permissão INTERNET no release. O backup do Android pode incluir

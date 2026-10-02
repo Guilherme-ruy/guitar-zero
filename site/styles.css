@@ -40,11 +40,16 @@ a:focus-visible { outline:3px solid var(--green); outline-offset:5px; }
 .scale-center { position:absolute; left:50%; top:-5px; width:1px; height:24px; background:var(--green); }
 .scale-needle { position:absolute; left:calc(50% + var(--needle)); top:-4px; width:10px; height:10px; border:2px solid var(--paper); background:var(--tuning-color); border-radius:50%; transform:translateX(-50%); box-shadow:0 0 0 1px var(--tuning-color); }
 .demo-status { font-size:11px; line-height:1.4; font-weight:600; margin:13px 0 0; }
-.hero-actions { display:flex; justify-content:center; align-items:center; gap:11px; flex-direction:column; margin-top:22px; }
+.hero-actions { display:flex; justify-content:center; align-items:center; gap:10px; margin-top:22px; }
+.store-button { appearance:none; display:flex; align-items:center; justify-content:center; gap:10px; width:146px; min-height:56px; padding:10px 13px; border:1px solid var(--ink); border-radius:12px; background:var(--ink); color:var(--paper); font-family:inherit; text-align:left; opacity:1; cursor:default; -webkit-text-fill-color:var(--paper); }
+.store-button svg { width:23px; height:23px; fill:none; stroke:var(--mint); stroke-width:1.35; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+.store-button:nth-child(2) svg { stroke-width:2.1; }
+.store-button>span { display:flex; flex-direction:column; gap:3px; }
+.store-button small { font-size:9px; font-weight:400; color:#bdc6bf; -webkit-text-fill-color:#bdc6bf; }
+.store-button strong { font-size:14px; font-weight:600; letter-spacing:-.025em; white-space:nowrap; }
 .button { display:inline-flex; align-items:center; justify-content:center; gap:25px; min-height:48px; padding:14px 21px; border-radius:99px; font-size:12px; font-weight:600; transition:background .2s; }
 .button-dark { background:var(--ink); color:var(--paper); }
 .button-dark:hover { background:var(--green); }
-.availability { font-size:10px; color:var(--muted); }
 .scroll-hint { display:none; }
 /* Enhancement only after JS checks motion preference and stage height. Never intercepts scroll. */
 .has-motion { min-height:calc(100svh + 330px); }
@@ -111,7 +116,10 @@ a:focus-visible { outline:3px solid var(--green); outline-offset:5px; }
   .hero-instrument { width:760px; }
   .tuning-orbit { width:300px; height:300px; left:calc(50% - 150px); top:calc(50% - 150px); }
   .art-note { width:56px; height:56px; font-size:26px; left:calc(50% - 240px); top:22px; }
-  .hero-actions { flex-direction:row; gap:21px; }
+  .hero-actions { gap:12px; }
+  .store-button { width:168px; min-height:60px; gap:12px; }
+  .store-button strong { font-size:16px; }
+  .store-button small { font-size:10px; }
   .has-motion { min-height:calc(100svh + 460px); }
   .how-layout,.privacy-section { grid-template-columns:1fr 1fr; gap:64px; }
   .how-section { padding:82px 0 72px; }
