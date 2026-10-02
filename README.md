@@ -109,7 +109,7 @@ flutter analyze
 flutter test
 ```
 
-**Sem Flutter instalado**: cada push gera no GitHub Actions o artefato
+**Sem Flutter instalado**: pushes com mudanças fora de `site/` geram no GitHub Actions o artefato
 `guitar-zero-apk` (APK release, assinado com a chave de debug — só para
 teste). Baixe em *Actions → CI → execução → Artifacts* e instale no Android
 (permitindo "fontes desconhecidas").
@@ -139,6 +139,13 @@ privacidade) está em [site/](site/README.md), sem build ou backend.
 
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda em todo push (qualquer
 branch) e em pull requests para a `main`:
+
+Uma verificação leve compara os arquivos alterados. Quando todos estão em
+`site/`, os jobs de Flutter e APK são pulados; o site não está declarado nos
+assets do Flutter e não entra no APK/AAB. Alterações mistas, novas branches
+e execuções manuais continuam validando e compilando o app. Pull requests
+comparam o conjunto de alterações desde a base, incluindo mudanças do app
+feitas em commits anteriores do mesmo PR.
 
 1. `flutter pub get`
 2. `dart format --set-exit-if-changed`
