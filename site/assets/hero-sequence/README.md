@@ -15,7 +15,10 @@ a transição escura inicial; 70 frames a 8 fps; proporção 16:9 preservada.
 - `manifest.json`: medidas e dados da conversão; somente documentação.
 
 Os pixels do fundo não foram removidos ou redesenhados. CSS `mix-blend-mode:
-multiply` integra o fundo claro do vídeo à cor da página.
+multiply` integra o fundo claro do vídeo à cor da página. A imagem se estende
+atrás do conteúdo e uma máscara CSS suaviza as bordas do quadro. Alguns
+enquadramentos do vídeo já cortam o instrumento; nenhuma parte ausente foi
+reconstruída na conversão.
 
 Os derivados preservam os direitos e condições aplicáveis ao vídeo de origem;
 não recebem automaticamente a dedicação CC0 das outras ilustrações desta

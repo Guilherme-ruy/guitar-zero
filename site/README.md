@@ -57,6 +57,9 @@ a partir da raiz do repositório; abra `http://localhost:8080`.
   pelo proprietário. Medidas e conversão no README/manifest dessa pasta;
   pôster estático de boa qualidade. O vídeo MP4 original e seu áudio não entram
   no site. O fundo claro é integrado à página pelo CSS, sem alterar os pixels.
+  A imagem ultrapassa seu espaço no layout, atrás dos textos e do medidor.
+  Uma máscara suave nas bordas disfarça os cortes que já existem no vídeo;
+  não recria partes do instrumento ausentes no original.
 - As duas ilustrações menores reaproveitam as imagens aprovadas do app.
   Favicon também deriva da logo aprovada. A dedicação CC0 em
   `assets/LICENSE.txt` cobre essas ilustrações; os derivados do vídeo e o GSAP

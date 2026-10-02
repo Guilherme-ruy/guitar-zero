@@ -20,14 +20,17 @@ a:focus-visible { outline:3px solid var(--green); outline-offset:5px; }
 .header nav { display:flex; align-items:center; gap:17px; font-size:11px; }
 .header nav a { display:inline-flex; align-items:center; min-height:44px; }
 .header nav a:hover,.header nav [aria-current=page] { color:var(--green); }
-.hero { --tuning-color:#17654b; --needle:0%; --hint:0; position:relative; }
-.hero-stage { --base-bottom:38px; position:relative; padding:23px 0 var(--base-bottom); text-align:center; }
+.hero { --tuning-color:#17654b; --needle:0%; --hint:0; position:relative; overflow:clip; }
+.hero-stage { --base-bottom:38px; position:relative; padding:23px 0 var(--base-bottom); text-align:center; isolation:isolate; background:var(--paper); }
+.hero-stage::before { content:""; position:absolute; inset:0 auto 0 50%; width:100vw; transform:translateX(-50%); background:var(--paper); z-index:-1; pointer-events:none; }
+.hero-copy,.tuning-demo,.hero-actions,.scroll-hint { position:relative; z-index:1; }
 .hero h1 { font-size:clamp(55px,12.8vw,84px); font-weight:700; letter-spacing:-.07em; line-height:.99; margin-bottom:15px; }
 .hero h1>span { color:var(--green); }
 .hero-copy>p { font-size:15px; color:var(--muted); line-height:1.5; margin-bottom:0; letter-spacing:-.02em; }
-.hero-art { position:relative; width:calc(100% + 40px); max-width:760px; aspect-ratio:16/9; margin:12px -20px 8px; overflow:hidden; background:var(--paper); isolation:isolate; }
-.hero-poster,.hero-canvas { width:100%; height:100%; object-fit:contain; mix-blend-mode:multiply; }
-.hero-canvas { position:absolute; inset:0; }
+.hero-art { position:relative; width:calc(100% + 40px); max-width:760px; aspect-ratio:16/9; margin:12px -20px 8px; overflow:visible; pointer-events:none; }
+/* The artwork extends beyond its layout space, behind the copy and meter.
+   Feather source-video edges rather than exposing a rectangular crop. */
+.hero-poster,.hero-canvas { position:absolute; left:50%; top:50%; width:min(128%,100vw); height:auto; aspect-ratio:16/9; max-width:none; transform:translate(-50%,-50%); object-fit:contain; mix-blend-mode:multiply; mask-image:linear-gradient(to right,transparent,#000 9%,#000 91%,transparent),linear-gradient(to bottom,transparent,#000 9%,#000 91%,transparent); mask-composite:intersect; -webkit-mask-composite:source-in; }
 .hero-canvas[hidden] { display:none; }
 .sequence-ready .hero-poster { visibility:hidden; }
 .tuning-demo { width:min(300px,100%); margin:0 auto; color:var(--tuning-color); }
