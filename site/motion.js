@@ -152,7 +152,12 @@
     const fits = staticHeight + extraSpace + 12 < window.innerHeight;
     const width = window.matchMedia('(min-width: 600px)').matches ? 864 : 480;
     if (!supported) { stop(); return; }
-    if (tween && currentWidth === width && currentPinned === fits) { ScrollTrigger.refresh(); return; }
+    if (tween && currentWidth === width && currentPinned === fits) {
+      ScrollTrigger.refresh();
+      tween.progress(tween.scrollTrigger.progress);
+      render();
+      return;
+    }
     stop();
     currentWidth = width;
     currentPinned = fits;
@@ -176,6 +181,7 @@
         invalidateOnRefresh: true
       }
     });
+    tween.progress(tween.scrollTrigger.progress);
     render();
   }
 
