@@ -1,0 +1,107 @@
+name: Play Store AAB
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_name:
+        description: Versão exibida na loja (ex. 1.0.0)
+        required: true
+        default: '1.0.0'
+        type: string
+      build_number:
+        description: versionCode novo, maior que qualquer envio anterior
+        required: true
+        default: '1'
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: play-bundle
+  cancel-in-progress: false
+
+env:
+  FLUTTER_VERSION: 3.47.5
+  BUNDLETOOL_VERSION: 1.18.3
+  BUNDLETOOL_SHA256: a099cfa1543f55593bc2ed16a70a7c67fe54b1747bb7301f37fdfd6d91028e29
+
+jobs:
+  bundle:
+    # Only trusted main can access upload-signing secrets in this workflow.
+    if: github.ref == 'refs/heads/main'
+    name: Signed AAB for Play Console
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      BUILD_NAME: ${{ inputs.build_name }}
+      BUILD_NUMBER: ${{ inputs.build_number }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validar versão e restaurar chave
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: python3 scripts/prepare_android_signing.py
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Validar projeto
+        run: |
+          flutter pub get
+          dart format --output=none --set-exit-if-changed lib test tool
+          flutter analyze --fatal-infos
+          flutter test
+          python3 -m unittest discover -s scripts/tests -v
+
+      - name: Gerar AAB com assinatura de upload
+        env:
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: flutter build appbundle --release --build-name "$BUILD_NAME" --build-number "$BUILD_NUMBER"
+
+      - name: Obter bundletool com checksum fixado
+        run: |
+          curl --fail --silent --show-error --location --retry 3 \
+            "https://github.com/google/bundletool/releases/download/$BUNDLETOOL_VERSION/bundletool-all-$BUNDLETOOL_VERSION.jar" \
+            --output "$RUNNER_TEMP/bundletool.jar"
+          printf '%s  %s\n' "$BUNDLETOOL_SHA256" "$RUNNER_TEMP/bundletool.jar" | sha256sum --check -
+
+      - name: Validar assinatura, manifesto e alinhamento nativo
+        env:
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          AAB=build/app/outputs/bundle/release/app-release.aab
+          java -jar "$RUNNER_TEMP/bundletool.jar" validate --bundle="$AAB"
+          java -jar "$RUNNER_TEMP/bundletool.jar" dump manifest --bundle="$AAB" > "$RUNNER_TEMP/play-manifest.xml"
+          java -jar "$RUNNER_TEMP/bundletool.jar" dump config --bundle="$AAB" > "$RUNNER_TEMP/play-config.json"
+          python3 scripts/verify_play_bundle.py "$AAB" "$RUNNER_TEMP/play-manifest.xml" "$RUNNER_TEMP/play-config.json"
+          sha256sum "$AAB" > build/app/outputs/bundle/release/app-release.aab.sha256
+
+      - name: Entregar AAB para envio manual
+        uses: actions/upload-artifact@v4
+        with:
+          name: guitar-zero-play-${{ inputs.build_name }}-${{ inputs.build_number }}
+          path: |
+            build/app/outputs/bundle/release/app-release.aab
+            build/app/outputs/bundle/release/app-release.aab.sha256
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Remover chave temporária
+        if: always()
+        run: rm -f -- "$RUNNER_TEMP/guitar-zero-upload.jks"

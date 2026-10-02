@@ -132,6 +132,11 @@ A captura ao vivo ainda não foi validada em celular. Roteiro curto:
 
 ## CI
 
+Publicação na Play Store: o workflow manual **Play Store AAB** entrega o bundle
+assinado após configurar os secrets de upload. Guia em
+[docs/PLAY_STORE.md](docs/PLAY_STORE.md). O site estático (início e política de
+privacidade) está em [site/](site/README.md), sem build ou backend.
+
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda em todo push (qualquer
 branch) e em pull requests para a `main`:
 

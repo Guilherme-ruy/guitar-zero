@@ -46,3 +46,10 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Upload signing material must never be committed, regardless of location.
+*.jks
+*.keystore
+*.p12
+*.pfx
+key.properties
