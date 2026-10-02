@@ -1,7 +1,7 @@
 SPDX-License-Identifier: CC0-1.0
 
 Guitar Zero website illustration assets, generated 2026-10-02 at the project owner's request.
-Applies to the images in this directory in this directory.
+Applies to the images in this directory.
 
 To the extent copyright and related rights exist and can be waived, these
 assets are dedicated to the public domain under CC0 1.0 Universal.

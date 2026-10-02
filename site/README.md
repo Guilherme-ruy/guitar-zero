@@ -1,45 +1,52 @@
 # Site estático do Guitar Zero
 
-Somente duas páginas: `index.html` (três seções) e `privacidade.html`.
-HTML e CSS puros, imagens locais WebP/PNG, sem JavaScript, PHP, framework,
-fontes externas, cookies, analytics ou chamadas a CDNs. Não exige build.
+O código fica em `site/`, no mesmo repositório do app. São duas páginas:
+`index.html` (três seções) e `privacidade.html`. HTML, CSS e JavaScript local,
+sem PHP, framework, build, fontes externas, cookies, analytics ou CDNs.
 
-## Hospedagem
+## Enviar para a Hostinger
 
-Envie **o conteúdo desta pasta** ao diretório público de qualquer hospedagem
-estática e ative HTTPS. Os caminhos são relativos: funciona na raiz de um
-domínio ou em uma subpasta, inclusive em hosts que não suportam reescrita de
-URLs. A política pode ser cadastrada no Play Console usando a URL pública
-final terminada em `/privacidade.html`, sem login ou bloqueio por região.
-Não envie arquivos do app, keystores ou secrets para a hospedagem.
+1. Faça backup dos arquivos existentes na pasta do domínio.
+2. Extraia o ZIP do site e envie **seu conteúdo** para `public_html`, ou para a
+   pasta pública vinculada ao domínio. `index.html`, `privacidade.html`,
+   `styles.css`, `motion.js` e `assets/` precisam ficar no mesmo nível.
+3. Mantenha HTTPS ativo. Acesse o site e teste o link de privacidade.
 
-Para visualizar localmente, `python -m http.server 8080 --directory site`
-a partir da raiz do repositório. Acesse `http://localhost:8080`.
+Funciona também em subpastas; todos os caminhos são relativos. Não exige
+Node, Flutter ou banco de dados no servidor. Se a hospedagem tiver um
+`index.php` antigo, verifique qual arquivo é servido como início.
+Os Markdown e a licença são documentação, sem necessidade de servir no site.
+Não envie o repositório inteiro, arquivos do app, keystores ou secrets.
 
-## Conteúdo antes do lançamento
+A política pública termina em `/privacidade.html`, sem login. Antes de
+cadastrá-la no Play Console, confira o nome do responsável e as práticas
+de logs da hospedagem. O app também deve oferecer acesso à política.
 
-- A disponibilidade atual é **Android · em breve**. Depois da publicação,
-  substitua esse texto por um link real da Play Store. Não há link de download
-  ou depoimentos fictícios.
-- E-mail público: `oruycontato@gmail.com`. Responsável identificado na política:
-  Guilherme Ruy. Confira o nome com o cadastro e a ficha do Play Console.
-- Antes de publicar a política, confira o provedor escolhido e suas práticas
-  de logs; ajuste a seção de hospedagem caso use analytics, cookies ou CDNs.
-  O texto distingue dados do app, mensagens voluntárias e logs da hospedagem.
-- Política baseada na implementação atual: `record` em stream PCM/memória,
-  sem upload de áudio; `shared_preferences` local; sem INTERNET no release.
-  Preferências podem participar do backup do próprio Android.
-- O app também precisa oferecer acesso à política. Nenhum Dart foi alterado
-  nesta entrega; integração do link/texto no app é uma etapa antes da revisão.
+## Hero e movimento
 
-## Imagens e peso
+`motion.js` aproxima o indicador de −32 cents até zero conforme a rolagem,
+com uma leve rotação da imagem e mudança de laranja para verde. É uma
+demonstração visual, sem microfone, som, gravação ou requisição de rede.
+Usa rolagem nativa, listener passivo e `requestAnimationFrame`, sem GSAP.
 
-Imagens de guitarra/violão aprovadas, reaproveitadas de `assets/instruments/`
-e recomprimidas em WebP (qualidade 84). Favicon derivado da logo aprovada.
-Arte não foi redesenhada; Pillow fez apenas conversão/redimensionamento.
-`srcset` adapta a imagem principal; imagens secundárias usam lazy loading.
-Todo o pacote visual fica abaixo de 200 KiB. Licença das imagens em
-`assets/LICENSE.txt` (CC0-1.0). As referências visuais enviadas pelo proprietário
-serviram apenas de inspiração; não são incluídas no site.
+A animação só fixa a hero quando ela cabe na altura da tela. Com movimento
+reduzido, economia de dados ou JavaScript desativado, exibe uma hero estática
+afinada, sem espaço extra. O conteúdo e os links continuam funcionando.
 
-Referência de privacidade: [política do Google Play](https://support.google.com/googleplay/android-developer/answer/10144311?hl=pt-BR).
+Para visualizar localmente: `python -m http.server 8080 --directory site`
+a partir da raiz do repositório; abra `http://localhost:8080`.
+
+## Arte e edição
+
+- `assets/headstock-600.webp` e `headstock-960.webp`: nova arte original das
+  tarraxas, gerada com a ferramenta integrada do Codex. Prompt e processo em
+  `assets/HERO_GENERATION.md`. Transparência nativa, WebP de qualidade 82.
+- As duas ilustrações menores reaproveitam as imagens aprovadas do app.
+  Favicon também deriva da logo aprovada. Licença CC0 em `assets/LICENSE.txt`.
+- A marca do site é SVG inline + tipografia de sistema; não muda o ícone do app.
+- Edite os textos nos HTML e as cores/medidas em `styles.css`.
+- Para lançar, troque “Em breve no Android” pelo link real da Play Store.
+
+A política descreve o app atual: áudio em memória, sem upload, preferências
+locais e sem permissão INTERNET no release. O backup do Android pode incluir
+preferências; o site pode gerar logs técnicos no provedor de hospedagem.
