@@ -71,6 +71,10 @@ Os [termos da OpenAI](https://openai.com/policies/row-terms-of-use/) atribuem
 ao usuário os direitos que a OpenAI tiver sobre a saída, na extensão permitida
 por lei. Não há garantia de exclusividade; CC0 não transfere marcas de terceiros.
 
+As assinaturas Guitar Zero identificam o projeto. O uso dessa identidade
+segue a [política de nome e logo](../../TRADEMARKS.md), sem alterar a CC0
+das ilustrações, dos JSONs e da documentação desta pasta.
+
 Pacote visual aprovado pelo proprietário para publicação no repositório. Integração e
 validação no app/aparelho permanecem pendentes.
 

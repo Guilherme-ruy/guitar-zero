@@ -5,8 +5,21 @@ Guitar Zero, com origem, licença e o que foi reutilizado ou adaptado.
 
 ## Código reutilizado ou adaptado
 
-**Nenhum até o momento.** Todo o código deste repositório foi escrito para o
-Guitar Zero.
+O código original do afinador foi escrito para o Guitar Zero e é
+disponibilizado sob a [licença MIT](LICENSE). Dependências de pacotes
+mantêm as licenças listadas ao final deste documento.
+
+O site em desenvolvimento no [PR #2](https://github.com/Guilherme-ruy/guitar-zero/pull/2)
+inclui as bibliotecas abaixo. Seus arquivos não são relicenciados pela MIT
+do Guitar Zero.
+
+| Projeto | Licença | Arquivos e uso |
+| --- | --- | --- |
+| GSAP e ScrollTrigger 3.15.0 — Webflow / GreenSock | [Standard License própria](https://gsap.com/standard-license/) | Cópias locais de distribuição em `site/vendor/gsap.min.js` e `site/vendor/ScrollTrigger.min.js`, para animação do site. Origem e checksums em `site/vendor/sources.json`; avisos originais preservados. |
+
+Os frames em `site/assets/hero-sequence/` têm origem e termos próprios;
+não recebem automaticamente a MIT do código ou a CC0 das ilustrações.
+O vídeo final do site continua pendente de geração e aprovação.
 
 Ao reutilizar ou adaptar código de terceiros:
 
@@ -63,11 +76,14 @@ Artigos de referência:
 ## Imagens
 
 Headstocks (`assets/instruments/`) e logo (`assets/branding/`) foram gerados
-para o Guitar Zero (ImageGen), sem imagens de fabricantes como entrada, e
-publicados como **CC0-1.0**. Origem, prompts e referências visuais
-consultadas estão nos `README.md`/`generation-prompts.md` de cada pasta. O
+para o Guitar Zero (ImageGen), com a origem das entradas e referências
+documentada por pasta, e dedicados sob **CC0-1.0**. Origem, prompts e
+referências visuais consultadas estão nos `README.md`/`generation-prompts.md`
+de cada pasta. O
 ícone Android (`android/app/src/main/res/mipmap-*`) é derivado da logo de
-1024 px. Nenhum asset do GuitarTuna é usado.
+1024 px e conserva a dedicação CC0 quanto aos direitos autorais. Nenhum
+asset do GuitarTuna é usado. A [política de identidade](TRADEMARKS.md)
+trata de direitos de marca e não revoga a CC0 dessas artes.
 
 ## Dados de teste
 

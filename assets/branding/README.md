@@ -47,3 +47,7 @@ modificação e redistribuição; veja LICENSE.txt. A dedicação não concede
 direitos de marca. Direitos sobre a saída seguem os
 [termos da OpenAI](https://openai.com/policies/row-terms-of-use/), na extensão
 permitida por lei. Não há garantia de exclusividade.
+
+O uso do nome e da logo para identificar a origem de um produto é tratado
+separadamente em [TRADEMARKS.md](../../TRADEMARKS.md). Essa política não
+altera a CC0 da ilustração nem revoga permissões anteriormente concedidas.

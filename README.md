@@ -100,6 +100,7 @@ dart run tool/temporal_report.dart # pipeline temporal: janela 3 vs 5, beta
 | Avaliação com 214 notas reais (NSynth) + 6 em teste de regressão no CI | ✅ 0 notas exibindo corda/oitava errada |
 | Troca de corda com a anterior soando, ruído (gravações reais misturadas) | ✅ testado; ⚠️ duas cordas em volume parecido ainda atrasam a troca |
 | Execução em aparelho Android / iOS | ⏳ não validado |
+| Site de apresentação (PR #2) | ⏳ em desenvolvimento; vídeo final pendente de geração e aprovação; sem publicação |
 
 ## Como executar
 
@@ -148,8 +149,25 @@ branch) e em pull requests para a `main`:
 
 ## Open source
 
-Nenhum código de terceiros copiado. Dependências, referências técnicas e
-política de reutilização: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+O código original do Guitar Zero e sua documentação geral estão sob a
+[licença MIT](LICENSE), com copyright de Guilherme Ruy. Ela permite estudar,
+modificar, distribuir e usar o código comercialmente, preservando os avisos
+de licença e copyright.
+
+O nome e a identidade visual têm uma [política separada](TRADEMARKS.md).
+A MIT não concede, por si, direitos de marca. As artes e a documentação em
+`assets/branding/` e `assets/instruments/` conservam suas licenças CC0;
+os seis áudios de teste NSynth seguem CC BY 4.0. Dependências e recursos
+de terceiros mantêm suas próprias licenças. Detalhes e créditos em
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 O GuitarTuna é usado apenas como referência de experiência de usuário; nenhum
 código, asset ou elemento visual dele é utilizado.
+
+## Site em desenvolvimento
+
+O site está sendo preparado no [PR #2](https://github.com/Guilherme-ruy/guitar-zero/pull/2).
+Ele ainda não está concluído: a sequência atual é provisória e aguarda um
+novo vídeo gerado no Gemini, revisão da anatomia e aprovação antes de trocar
+os frames. Os arquivos locais de vídeo, prompt e referências não fazem parte
+dos assets aprovados. A integração do código não equivale a publicar o site.
