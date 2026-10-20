@@ -19,7 +19,9 @@ A primeira versão é só um afinador, muito bem feito:
 - medidor de abaixo/acima e feedback visual quando afinada (o número em
   cents fica só no painel de diagnóstico);
 - instrução que não pisca: o último resultado fica na tela por 5 s depois
-  que o som acaba, e então diz o próximo passo.
+  que o som acaba, e então diz o próximo passo;
+- tela acesa enquanto o app Android está visível, permitindo afinar sem
+  tocar no celular para evitar o bloqueio automático.
 
 Fora de escopo nesta versão: login, backend, banco de dados, analytics,
 anúncios, metrônomo, acordes, afinações alternativas, recursos sociais.

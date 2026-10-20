@@ -87,6 +87,9 @@ botões. A imagem não muda com a corda ativa: só os botões. Botões de
 30–48 dp, limitados pela distância ao vizinho; layout testado em 360×640,
 375×667, 390×844 e 412×915 sem estouro nem sobreposição.
 
+No Android, a Activity usa `FLAG_KEEP_SCREEN_ON`; o sistema volta a permitir
+o desligamento automático da tela quando o app deixa de estar visível.
+
 ## Instrução e resultado na tela
 
 O pipeline mantém a leitura por 700 ms (`SilenceHold`). Na UI, o
