@@ -46,3 +46,27 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Upload signing material must never be committed, regardless of location.
+*.jks
+*.keystore
+*.p12
+*.pfx
+key.properties
+
+# Other private credentials and local environment files.
+*.p8
+*.pem
+*.key
+.env
+.env.*
+!.env.example
+.secrets/
+.local/
+
+# Local working notes and original media; approved assets have their own folders.
+/CONTEXTO_GUITAR_ZERO.md
+/PROMPT_GEMINI.md
+/costas-referencia.webp
+/frente-com-escala.png
+/gemini_generated_video_*.mp4
