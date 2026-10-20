@@ -96,9 +96,8 @@ class _AmbientPainter extends CustomPainter {
       canvas.drawRect(
         bounds,
         Paint()
-          ..shader = RadialGradient(
-            colors: [color, color.withValues(alpha: 0)],
-          ).createShader(area),
+          ..shader = RadialGradient(colors: [color, color.withValues(alpha: 0)])
+              .createShader(area),
       );
     }
 
