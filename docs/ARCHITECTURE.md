@@ -89,6 +89,10 @@ botões. A imagem não muda com a corda ativa: só os botões. Botões de
 30–48 dp, limitados pela distância ao vizinho. Os testes de layout cobrem
 360×640, 375×667, 390×844 e 412×915, verificando limites e sobreposição.
 
+O fundo `TunerBackdrop` pinta gradientes e três ondas suaves em um
+`RepaintBoundary`, com ciclo de 24 s. O controlador repinta somente o fundo,
+sem reconstruir a tela nem aguardar recursos na abertura. A animação pausa
+fora do primeiro plano, com `TickerMode` desativado ou redução de movimento.
 No Android, a Activity usa `FLAG_KEEP_SCREEN_ON`; o sistema volta a permitir
 o desligamento automático da tela quando o app deixa de estar visível.
 

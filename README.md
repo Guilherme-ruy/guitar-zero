@@ -21,7 +21,9 @@ A primeira versão é só um afinador, muito bem feito:
 - instrução que não pisca: o último resultado fica na tela por 5 s depois
   que o som acaba, e então diz o próximo passo;
 - tela acesa enquanto o app Android está visível, permitindo afinar sem
-  tocar no celular para evitar o bloqueio automático.
+  tocar no celular para evitar o bloqueio automático;
+- fundo em grafite com luz ambiente e ondas lentas; o movimento pausa em
+  segundo plano e respeita a redução de animações do sistema.
 
 Fora de escopo nesta versão: login, backend, banco de dados, analytics,
 anúncios, metrônomo, acordes, afinações alternativas, recursos sociais.

@@ -13,12 +13,27 @@ import 'package:guitar_zero/features/tuner/widgets/string_board.dart';
 import '../../support/fakes.dart';
 
 void main() {
-  testWidgets('estado inicial pede para tocar uma corda', (tester) async {
-    final engine = FakeTunerEngine();
+  final binding = TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(() {
+    // Exercita a preferência real de acessibilidade: o fundo fica estático,
+    // enquanto as transições finitas continuam cobertas por pumpAndSettle.
+    binding.platformDispatcher.accessibilityFeaturesTestValue =
+        const FakeAccessibilityFeatures(disableAnimations: true);
+  });
+  tearDown(binding.platformDispatcher.clearAccessibilityFeaturesTestValue);
+
+  testWidgets('abre no afinador e inicia a escuta no primeiro frame', (
+    tester,
+  ) async {
+    final engine = _StartCountingEngine();
     await tester.pumpWidget(GuitarZeroApp(engine: engine));
+
+    expect(engine.starts, 1);
+    expect(find.byType(HeadstockView), findsOneWidget);
+    expect(find.text('GUITAR ZERO'), findsOneWidget);
     await tester.pump();
 
-    expect(find.text('GUITAR ZERO'), findsOneWidget);
     expect(find.text('Toque uma corda para começar'), findsOneWidget);
     expect(find.text('DEMO'), findsNothing);
     // As seis cordas da afinação Standard.
@@ -237,4 +252,14 @@ void main() {
       expect(find.text('A'), findsNothing);
     });
   });
+}
+
+class _StartCountingEngine extends FakeTunerEngine {
+  int starts = 0;
+
+  @override
+  Future<void> start() {
+    starts++;
+    return super.start();
+  }
 }

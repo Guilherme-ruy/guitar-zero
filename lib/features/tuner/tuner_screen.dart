@@ -11,6 +11,7 @@ import 'widgets/headstock/headstock_view.dart';
 import 'widgets/note_display.dart';
 import 'widgets/settings_sheet.dart';
 import 'widgets/string_board.dart';
+import 'widgets/tuner_backdrop.dart';
 import 'widgets/tuner_hint.dart';
 import 'widgets/zero_meter.dart';
 
@@ -70,108 +71,115 @@ class _TunerScreenState extends State<TunerScreen> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     final prefs = widget.preferences;
     return Scaffold(
-      body: SafeArea(
-        bottom: false,
-        child: ListenableBuilder(
-          listenable: Listenable.merge([_controller, prefs]),
-          builder: (context, _) {
-            final reading = _controller.reading;
-            final activeColor = reading == null
-                ? GzColors.textPrimary
-                : GzColors.forCents(reading.cents);
-            final manual = _controller.isAutoMode
-                ? null
-                : _controller.activeString;
-            final strings = _controller.tuning.strings;
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-              child: Column(
-                children: [
-                  _Header(
-                    isAuto: _controller.isAutoMode,
-                    onAutoChanged: _controller.setAutoMode,
-                    onLongPressLogo: () =>
-                        setState(() => _showDiagnostics = !_showDiagnostics),
-                  ),
-                  const SizedBox(height: 4),
-                  _InstrumentBar(
-                    label:
-                        '${prefs.instrument == InstrumentStyle.acoustic ? 'Violão' : 'Guitarra'}'
-                        ' · ${_controller.tuning.name}',
-                    isDemo: widget.isDemo,
-                    onTap: () => showTunerSettings(context, prefs),
-                  ),
-                  if (_showDiagnostics) ...[
-                    const SizedBox(height: 8),
-                    DiagnosticsPanel(
-                      diagnostics: widget.engine.diagnostics,
-                      reading: reading,
-                    ),
-                  ],
-                  const SizedBox(height: 12),
-                  // Leitura mantida após o som acabar (hold): atenuada.
-                  AnimatedOpacity(
-                    duration: GzDurations.state,
-                    opacity: reading?.isHeld ?? false ? 0.45 : 1,
-                    child: Column(
-                      children: [
-                        NoteDisplay(
-                          note: _controller.activeString?.note,
-                          frequency: reading?.frequency,
-                          naming: prefs.noteNaming,
-                          // Telas baixas: mais altura para o instrumento.
-                          compact: MediaQuery.sizeOf(context).height < 720,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          const TunerBackdrop(),
+          SafeArea(
+            bottom: false,
+            child: ListenableBuilder(
+              listenable: Listenable.merge([_controller, prefs]),
+              builder: (context, _) {
+                final reading = _controller.reading;
+                final activeColor = reading == null
+                    ? GzColors.textPrimary
+                    : GzColors.forCents(reading.cents);
+                final manual = _controller.isAutoMode
+                    ? null
+                    : _controller.activeString;
+                final strings = _controller.tuning.strings;
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                  child: Column(
+                    children: [
+                      _Header(
+                        isAuto: _controller.isAutoMode,
+                        onAutoChanged: _controller.setAutoMode,
+                        onLongPressLogo: () => setState(
+                          () => _showDiagnostics = !_showDiagnostics,
                         ),
-                        const SizedBox(height: 16),
-                        ZeroMeter(
-                          cents: reading?.cents,
-                          isInTune: reading?.isInTune ?? false,
+                      ),
+                      const SizedBox(height: 4),
+                      _InstrumentBar(
+                        label:
+                            '${prefs.instrument == InstrumentStyle.acoustic ? 'Violão' : 'Guitarra'}'
+                            ' · ${_controller.tuning.name}',
+                        isDemo: widget.isDemo,
+                        onTap: () => showTunerSettings(context, prefs),
+                      ),
+                      if (_showDiagnostics) ...[
+                        const SizedBox(height: 8),
+                        DiagnosticsPanel(
+                          diagnostics: widget.engine.diagnostics,
+                          reading: reading,
                         ),
                       ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TunerHint(
-                    status: _controller.status,
-                    reading: reading,
-                    lastResult: _controller.lastResult,
-                    allStringsTuned: _controller.allStringsTuned,
-                    onRetry: _controller.start,
-                    manualString: manual,
-                    naming: prefs.noteNaming,
-                  ),
-                  const SizedBox(height: 12),
-                  Expanded(
-                    child: AnimatedSwitcher(
-                      duration: GzDurations.state,
-                      child: prefs.showInstrument
-                          ? HeadstockView(
-                              key: ValueKey(prefs.instrument),
-                              style: prefs.instrument,
-                              strings: strings,
-                              activeString: _controller.activeString,
-                              selectedString: manual,
-                              activeColor: activeColor,
-                              tunedStrings: _controller.tunedStrings,
+                      const SizedBox(height: 12),
+                      // Leitura mantida após o som acabar (hold): atenuada.
+                      AnimatedOpacity(
+                        duration: GzDurations.state,
+                        opacity: reading?.isHeld ?? false ? 0.45 : 1,
+                        child: Column(
+                          children: [
+                            NoteDisplay(
+                              note: _controller.activeString?.note,
+                              frequency: reading?.frequency,
                               naming: prefs.noteNaming,
-                              onSelect: _controller.selectString,
-                            )
-                          : StringBoard(
-                              strings: strings,
-                              activeString: _controller.activeString,
-                              selectedString: manual,
-                              activeColor: activeColor,
-                              tunedStrings: _controller.tunedStrings,
-                              naming: prefs.noteNaming,
-                              onSelect: _controller.selectString,
+                              // Telas baixas: mais altura para o instrumento.
+                              compact: MediaQuery.sizeOf(context).height < 720,
                             ),
-                    ),
+                            const SizedBox(height: 16),
+                            ZeroMeter(
+                              cents: reading?.cents,
+                              isInTune: reading?.isInTune ?? false,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TunerHint(
+                        status: _controller.status,
+                        reading: reading,
+                        lastResult: _controller.lastResult,
+                        allStringsTuned: _controller.allStringsTuned,
+                        onRetry: _controller.start,
+                        manualString: manual,
+                        naming: prefs.noteNaming,
+                      ),
+                      const SizedBox(height: 12),
+                      Expanded(
+                        child: AnimatedSwitcher(
+                          duration: GzDurations.state,
+                          child: prefs.showInstrument
+                              ? HeadstockView(
+                                  key: ValueKey(prefs.instrument),
+                                  style: prefs.instrument,
+                                  strings: strings,
+                                  activeString: _controller.activeString,
+                                  selectedString: manual,
+                                  activeColor: activeColor,
+                                  tunedStrings: _controller.tunedStrings,
+                                  naming: prefs.noteNaming,
+                                  onSelect: _controller.selectString,
+                                )
+                              : StringBoard(
+                                  strings: strings,
+                                  activeString: _controller.activeString,
+                                  selectedString: manual,
+                                  activeColor: activeColor,
+                                  tunedStrings: _controller.tunedStrings,
+                                  naming: prefs.noteNaming,
+                                  onSelect: _controller.selectString,
+                                ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            );
-          },
-        ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
