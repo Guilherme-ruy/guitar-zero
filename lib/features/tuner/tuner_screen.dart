@@ -108,7 +108,7 @@ class _TunerScreenState extends State<TunerScreen> with WidgetsBindingObserver {
                       reading: reading,
                     ),
                   ],
-                  const Spacer(),
+                  const SizedBox(height: 12),
                   // Leitura mantida após o som acabar (hold): atenuada.
                   AnimatedOpacity(
                     duration: GzDurations.state,
@@ -142,7 +142,6 @@ class _TunerScreenState extends State<TunerScreen> with WidgetsBindingObserver {
                   ),
                   const SizedBox(height: 12),
                   Expanded(
-                    flex: prefs.showInstrument ? 7 : 4,
                     child: AnimatedSwitcher(
                       duration: GzDurations.state,
                       child: prefs.showInstrument

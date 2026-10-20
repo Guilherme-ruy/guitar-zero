@@ -44,7 +44,7 @@ class HeadstockView extends StatelessWidget {
     final layout = HeadstockLayout.of(style);
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Imagem inteira (contain), centralizada e ancorada embaixo.
+        // Imagem inteira (contain); usa a folga para subir até 48 dp.
         var height = math.min(
           constraints.maxHeight,
           (constraints.maxWidth - 2 * sideMargin) / HeadstockLayout.aspectRatio,
@@ -60,9 +60,17 @@ class HeadstockView extends StatelessWidget {
           size = _buttonSize(buttons, height);
         }
         final width = height * HeadstockLayout.aspectRatio;
+        final slack = constraints.maxHeight - height;
+        final minButtonTop = buttons
+            .map((b) => b.dy * height - size / 2)
+            .reduce(math.min);
+        final bottomSpace = math.min(
+          48.0,
+          math.min(slack * 0.6, math.max(0.0, slack + minButtonTop - 2)),
+        );
         final image = Rect.fromLTWH(
           (constraints.maxWidth - width) / 2,
-          constraints.maxHeight - height,
+          constraints.maxHeight - height - bottomSpace,
           width,
           height,
         );
@@ -80,11 +88,20 @@ class HeadstockView extends StatelessWidget {
           children: [
             Positioned.fromRect(
               rect: image,
-              child: Image.asset(
-                layout.asset,
-                fit: BoxFit.fill,
-                excludeFromSemantics: true,
-                gaplessPlayback: true,
+              child: ShaderMask(
+                blendMode: BlendMode.dstIn,
+                shaderCallback: (bounds) => const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.white, Colors.white, Colors.transparent],
+                  stops: [0, 0.88, 1],
+                ).createShader(bounds),
+                child: Image.asset(
+                  layout.asset,
+                  fit: BoxFit.fill,
+                  excludeFromSemantics: true,
+                  gaplessPlayback: true,
+                ),
               ),
             ),
             Positioned.fill(

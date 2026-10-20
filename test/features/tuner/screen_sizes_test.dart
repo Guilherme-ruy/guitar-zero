@@ -5,6 +5,7 @@ import 'package:guitar_zero/core/music/tuning.dart';
 import 'package:guitar_zero/core/tuner/tuner_reading.dart';
 import 'package:guitar_zero/features/preferences/preferences_store.dart';
 import 'package:guitar_zero/features/preferences/tuner_preferences.dart';
+import 'package:guitar_zero/features/tuner/widgets/string_button.dart';
 
 import '../../support/fakes.dart';
 
@@ -27,6 +28,9 @@ void main() {
         ) async {
           tester.view.physicalSize = size * 2;
           tester.view.devicePixelRatio = 2;
+          // Valores físicos: 24 dp para as barras superior e inferior.
+          tester.view.padding = const FakeViewPadding(top: 48, bottom: 48);
+          tester.view.viewPadding = const FakeViewPadding(top: 48, bottom: 48);
           addTearDown(tester.view.reset);
           final prefs = TunerPreferences(InMemoryPreferencesStore())
             ..instrument = instrument
@@ -46,25 +50,25 @@ void main() {
           );
           await tester.pump(const Duration(seconds: 1));
 
+          expect(tester.takeException(), isNull);
+          final buttons = find.byType(StringButton);
+          expect(buttons, findsNWidgets(6));
           final rects = [
-            for (final name in ['D', 'G', 'B'])
-              tester.getRect(
-                find
-                    .ancestor(
-                      of: find.text(name),
-                      matching: find.byType(SizedBox),
-                    )
-                    .first,
-              ),
+            for (var i = 0; i < 6; i++) tester.getRect(buttons.at(i)),
           ];
+          final usableArea = Rect.fromLTRB(0, 24, size.width, size.height - 24);
           for (var i = 0; i < rects.length; i++) {
+            expect(
+              usableArea.contains(rects[i].topLeft) &&
+                  usableArea.contains(rects[i].bottomRight),
+              isTrue,
+              reason: 'corda ${i + 1} fora da área útil: ${rects[i]}',
+            );
             for (var j = i + 1; j < rects.length; j++) {
               expect(
-                rects[i].intersect(rects[j]).isEmpty ||
-                    rects[i].intersect(rects[j]).width <= 0 ||
-                    rects[i].intersect(rects[j]).height <= 0,
-                isTrue,
-                reason: 'botões sobrepostos',
+                rects[i].overlaps(rects[j]),
+                isFalse,
+                reason: 'botões ${i + 1} e ${j + 1} sobrepostos',
               );
             }
           }

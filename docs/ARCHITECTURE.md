@@ -80,12 +80,14 @@ Imagens WebP em `assets/instruments/` (1x/2x/3x, CC0, geradas para o
 projeto). `HeadstockLayout` guarda as coordenadas normalizadas (0–1 sobre a
 imagem inteira) das chaves e dos botões, copiadas dos JSONs que acompanham
 as imagens; um teste garante que continuam iguais. `HeadstockView` encaixa a
-imagem (contain, ancorada embaixo, margem lateral de 32 dp para os botões
-poderem sair do retângulo) e posiciona botões e conectores no mesmo
-retângulo. Guitarra com imagem abaixo de 500 dp usa a coluna compacta de
+imagem (contain, margem lateral de 32 dp para os botões poderem sair do
+retângulo) e posiciona botões e conectores no mesmo retângulo. A folga
+vertical permite subir o conjunto até 48 dp, preservando o espaço do botão
+superior. O final do braço tem uma transição de transparência nos últimos
+12% da imagem. Guitarra com imagem abaixo de 500 dp usa a coluna compacta de
 botões. A imagem não muda com a corda ativa: só os botões. Botões de
-30–48 dp, limitados pela distância ao vizinho; layout testado em 360×640,
-375×667, 390×844 e 412×915 sem estouro nem sobreposição.
+30–48 dp, limitados pela distância ao vizinho. Os testes de layout cobrem
+360×640, 375×667, 390×844 e 412×915, verificando limites e sobreposição.
 
 No Android, a Activity usa `FLAG_KEEP_SCREEN_ON`; o sistema volta a permitir
 o desligamento automático da tela quando o app deixa de estar visível.
