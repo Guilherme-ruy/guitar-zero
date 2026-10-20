@@ -1,0 +1,22 @@
+SPDX-License-Identifier: CC0-1.0
+
+Guitar Zero website illustration assets, generated 2026-10-02 at the project owner's request.
+Applies to acoustic-576.webp, electric-576.webp, icon-96.png and the original
+headstock illustrations in this directory. The owner-supplied video derivatives
+under hero-sequence/ have separate provenance and terms in that folder's README.
+
+To the extent copyright and related rights exist and can be waived, these
+assets are dedicated to the public domain under CC0 1.0 Universal.
+Copying, modification, redistribution, and commercial use are permitted
+without attribution. Provided without warranties. No trademark or patent
+rights are granted, and no endorsement is implied.
+
+The complete CC0 1.0 Universal legal code governs this dedication:
+https://creativecommons.org/publicdomain/zero/1.0/legalcode.en
+
+The dedication concerns rights held by the project owner; it does not
+override any third-party rights or the terms of the generation service.
+
+The project name and identity are addressed separately in ../../TRADEMARKS.md.
+That policy does not revoke this CC0 dedication or restrict the copyright
+permissions granted above.

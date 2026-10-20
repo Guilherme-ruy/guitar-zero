@@ -1,0 +1,22 @@
+{
+  "frameCount": 70,
+  "sourceFps": 24,
+  "sequenceFps": 8,
+  "sourceDurationSeconds": 10.01,
+  "trimStartSeconds": 0.75,
+  "trimDurationSeconds": 8.75,
+  "variants": [
+    {
+      "width": 480,
+      "height": 270,
+      "path": "480/frame-{index:03d}.webp",
+      "bytes": 467768
+    },
+    {
+      "width": 864,
+      "height": 486,
+      "path": "864/frame-{index:03d}.webp",
+      "bytes": 1059882
+    }
+  ]
+}

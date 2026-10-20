@@ -15,8 +15,24 @@ env:
   FLUTTER_VERSION: 3.47.5
 
 jobs:
+  changes:
+    name: Detect app changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      app: ${{ steps.paths.outputs.app }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verificar arquivos alterados
+        id: paths
+        run: python3 scripts/ci_app_changes.py
+
   validate:
     name: Analyze & test
+    needs: changes
+    if: ${{ always() && !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.app == 'true') }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -34,6 +50,9 @@ jobs:
       - name: Dependências
         run: flutter pub get
 
+      - name: Ferramentas de publicação
+        run: python3 -m unittest discover -s scripts/tests -v
+
       - name: Formatação
         run: dart format --output=none --set-exit-if-changed lib test tool
 
@@ -45,6 +64,8 @@ jobs:
 
   android:
     name: Build Android (APK)
+    needs: changes
+    if: ${{ always() && !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.app == 'true') }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
