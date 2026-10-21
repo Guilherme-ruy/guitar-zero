@@ -7,10 +7,11 @@
   <meta name="description" content="Afine sua guitarra ou violão. Guitar Zero: seis cordas, zero distrações. Offline, sem anúncios e sem envio de áudio.">
   <title>Guitar Zero — Afine no zero.</title>
   <link rel="icon" href="assets/icon-96.png" type="image/png">
-  <link rel="stylesheet" href="styles.css?v=8">
+  <link rel="stylesheet" href="styles.css?v=11">
   <script src="vendor/gsap.min.js" defer></script>
   <script src="vendor/ScrollTrigger.min.js" defer></script>
   <script src="motion.js?v=8" defer></script>
+  <script src="how.js?v=2" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
@@ -53,20 +54,42 @@
       </div>
     </section>
     <section class="how-section" id="como" aria-labelledby="how-title">
+      <div class="how-atmosphere" aria-hidden="true"><span class="how-light-sage"></span><span class="how-light-warm"></span></div>
       <div class="how-layout wrap">
         <div class="how-intro">
-          <h2 id="how-title">Menos ajuste.<br>Mais música.</h2>
-          <p>Seis cordas. Afinação padrão.<br>Só o que você precisa para tocar.</p>
-          <div class="instrument-pair" aria-hidden="true">
-            <div class="instrument-sample acoustic-sample"><img src="assets/acoustic-576.webp" width="576" height="720" alt="" loading="lazy" decoding="async"><span>Violão</span></div>
-            <div class="instrument-sample electric-sample"><img src="assets/electric-576.webp" width="576" height="720" alt="" loading="lazy" decoding="async"><span>Guitarra</span></div>
+          <h2 id="how-title"><span>Afine rápido.</span><em>Mais música.</em></h2>
+          <p class="instrument-prompt">Escolha o visual.</p>
+          <div class="instrument-pair" role="group" aria-label="Design do afinador">
+            <button type="button" class="instrument-sample acoustic-sample" data-instrument-choice="acoustic" aria-pressed="true"><img src="assets/acoustic-576.webp" width="576" height="720" alt="" loading="lazy" decoding="async"><span class="instrument-label">Violão</span><span class="instrument-check" aria-hidden="true">✓</span></button>
+            <button type="button" class="instrument-sample electric-sample" data-instrument-choice="electric" aria-pressed="false"><img src="assets/electric-576.webp" width="576" height="720" alt="" loading="lazy" decoding="async"><span class="instrument-label">Guitarra</span><span class="instrument-check" aria-hidden="true">✓</span></button>
           </div>
         </div>
-        <ol class="steps">
-          <li><span class="step-number">01</span><div><h3>Toque.</h3><p>Uma corda por vez. O app encontra a nota.</p></div><span class="step-symbol" aria-hidden="true">↗</span></li>
-          <li><span class="step-number">02</span><div><h3>Ajuste.</h3><p>Gire a tarraxa. Aproxime o indicador do centro.</p></div><span class="step-symbol" aria-hidden="true">↔</span></li>
-          <li><span class="step-number">03</span><div><h3>Pronto.</h3><p>Ficou verde? Chegou ao zero. Pode tocar.</p></div><span class="step-symbol step-ring" aria-hidden="true"></span></li>
-        </ol>
+        <div class="mode-demo" data-mode="auto" data-instrument="acoustic" role="group" aria-label="Prévia interativa do aplicativo">
+          <div class="preview-toolbar">
+            <span class="preview-wordmark" aria-hidden="true">guitar <em>zero</em></span>
+            <div class="mode-switch" role="group" aria-label="Modo de afinação">
+              <button type="button" data-tuning-mode="auto" aria-pressed="true" aria-label="Modo automático">Auto</button>
+              <button type="button" data-tuning-mode="manual" aria-pressed="false" aria-label="Modo manual">Manual</button>
+            </div>
+          </div>
+          <div class="mode-stage" aria-hidden="true">
+            <div class="mode-readout"><span data-mode-note>A</span><span data-mode-string>5ª corda</span></div>
+            <div class="mode-scale"><span class="mode-scale-zero">0</span><span class="mode-scale-track"></span><span class="mode-needle" data-mode-needle></span></div>
+            <span class="mode-result" data-mode-result>Afinada</span>
+          </div>
+          <div class="headstock-frame">
+            <img data-headstock-image src="assets/acoustic-576.webp" width="576" height="720" alt="" loading="lazy" decoding="async">
+            <svg data-headstock-lines="" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg>
+            <div class="string-choices" role="group" aria-label="Escolher corda e ativar o modo manual">
+              <button type="button" data-string="6" style="left:4%;top:51.9258%" aria-pressed="false" aria-label="6ª corda, Mi grave, E2"><span>E</span><small>6ª</small></button>
+              <button type="button" data-string="5" style="left:4%;top:34.2368%" aria-pressed="true" aria-label="5ª corda, Lá, A2"><span>A</span><small>5ª</small></button>
+              <button type="button" data-string="4" style="left:4%;top:16.6904%" aria-pressed="false" aria-label="4ª corda, Ré, D3"><span>D</span><small>4ª</small></button>
+              <button type="button" data-string="3" style="left:96%;top:16.6904%" aria-pressed="false" aria-label="3ª corda, Sol, G3"><span>G</span><small>3ª</small></button>
+              <button type="button" data-string="2" style="left:96%;top:34.2368%" aria-pressed="false" aria-label="2ª corda, Si, B3"><span>B</span><small>2ª</small></button>
+              <button type="button" data-string="1" style="left:96%;top:51.9258%" aria-pressed="false" aria-label="1ª corda, Mi agudo, E4"><span>E</span><small>1ª</small></button>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
     <section class="privacy-section wrap" aria-labelledby="privacy-title">
