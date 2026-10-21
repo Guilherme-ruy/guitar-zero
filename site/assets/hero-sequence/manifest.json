@@ -1,22 +1,58 @@
 {
+  "assetVersion": 4,
+  "sourceFile": "Guitar_Zero_headstock_rotation_1080p.mp4",
+  "sourceSha256": "9468acbca1af156de65b6863438fbed73ab3ea835f7921de2f99bead442fd12d",
+  "sourceWidth": 1920,
+  "sourceHeight": 1080,
   "frameCount": 70,
-  "sourceFps": 24,
-  "sequenceFps": 8,
-  "sourceDurationSeconds": 10.01,
-  "trimStartSeconds": 0.75,
-  "trimDurationSeconds": 8.75,
+  "sourceFps": 24.0,
+  "sequenceFps": 10,
+  "sourceDurationSeconds": 8.0,
+  "trimStartSeconds": 1,
+  "trimDurationSeconds": 7,
+  "sampling": "FFmpeg fps=10 after input trim, Lanczos scaling",
   "variants": [
     {
-      "width": 480,
-      "height": 270,
-      "path": "480/frame-{index:03d}.webp",
-      "bytes": 467768
+      "width": 960,
+      "height": 540,
+      "path": "960/frame-{index:03d}.webp",
+      "quality": 88,
+      "bytes": 1948004
     },
     {
-      "width": 864,
-      "height": 486,
-      "path": "864/frame-{index:03d}.webp",
-      "bytes": 1059882
+      "width": 1440,
+      "height": 810,
+      "path": "1440/frame-{index:03d}.webp",
+      "quality": 88,
+      "bytes": 3591872
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "path": "1920/frame-{index:03d}.webp",
+      "quality": 88,
+      "bytes": 5315232
     }
-  ]
+  ],
+  "poster": {
+    "width": 1440,
+    "height": 810,
+    "frameIndex": 0,
+    "bytes": 73140
+  },
+  "alphaPrecomputed": true,
+  "alpha": {
+    "background": "edge-connected studio white",
+    "minChannel": 240,
+    "maxChannelSpread": 14,
+    "connectivity": 4,
+    "values": [
+      0,
+      255
+    ],
+    "encoding": "lossless WebP ALPH; Pillow method=1, alpha_quality=100",
+    "rgb": "original FFmpeg Q88 VP8 chunk preserved byte-for-byte",
+    "processing": "threshold after WebP decode; NumPy row spans and union-find",
+    "implementation": "site/tools/prepare_hero_alpha.py"
+  }
 }

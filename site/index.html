@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f3f0e8">
   <meta name="description" content="Afine sua guitarra ou violão. Guitar Zero: seis cordas, zero distrações. Offline, sem anúncios e sem envio de áudio.">
-  <title>Guitar Zero — Encontre seu zero.</title>
+  <title>Guitar Zero — Afine no zero.</title>
   <link rel="icon" href="assets/icon-96.png" type="image/png">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=8">
   <script src="vendor/gsap.min.js" defer></script>
   <script src="vendor/ScrollTrigger.min.js" defer></script>
-  <script src="motion.js" defer></script>
+  <script src="motion.js?v=8" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
@@ -24,30 +24,32 @@
   <main id="conteudo">
     <section class="hero" aria-labelledby="hero-title">
       <div class="hero-stage wrap">
+        <div class="hero-atmosphere" aria-hidden="true"><span class="ambient-sage"></span><span class="ambient-warm"></span></div>
         <div class="hero-copy">
-          <h1 id="hero-title">Encontre <br>seu <span>zero.</span></h1>
-          <p>Seu violão. Sua guitarra.<br class="mobile-break"> Na afinação certa.</p>
+          <h1 id="hero-title"><span class="hero-title-main">Afine no</span> <span class="hero-zero">zero<span class="hero-period">.</span><svg viewBox="0 0 240 26" aria-hidden="true"><path d="M5 18C56 7 146 2 227 10M55 23C111 13 177 11 235 14"/></svg></span></h1>
+          <p class="hero-lead">Afinação simples, sem distrações.</p>
+          <p class="hero-benefits"><span>Rápido</span><span>Sem anúncios</span><span>Offline</span></p>
         </div>
-        <div class="hero-art hero-sequence" aria-hidden="true">
-          <img class="hero-poster" src="assets/hero-sequence/poster.webp" width="864" height="486" alt="" fetchpriority="high" decoding="async">
-          <canvas class="hero-canvas" width="480" height="270" hidden></canvas>
-        </div>
-        <div class="tuning-demo" role="img" aria-label="Demonstração visual: o indicador se aproxima do zero conforme você rola a página. Não utiliza o microfone.">
-          <div class="demo-reading" aria-hidden="true"><span class="demo-value">0</span><span class="demo-unit">cents</span></div>
-          <div class="tuning-scale" aria-hidden="true"><span>−50</span><div class="scale-track"><span class="scale-center"></span><span class="scale-needle"></span></div><span>+50</span></div>
-          <p class="demo-status" aria-hidden="true">No zero.</p>
+        <div class="hero-scene" aria-hidden="true">
+          <div class="tuning-demo">
+            <span class="demo-value"><span class="demo-current">−24</span><span class="demo-next">−23</span></span>
+            <div class="tuning-scale"><div class="scale-track"><svg viewBox="0 0 600 44" preserveAspectRatio="none"><path class="scale-baseline" d="M0 33H600"/><path class="scale-ticks" d="M0 15V33M30 24V33M60 24V33M90 24V33M120 24V33M150 15V33M180 24V33M210 24V33M240 24V33M270 24V33M330 24V33M360 24V33M390 24V33M420 24V33M450 15V33M480 24V33M510 24V33M540 24V33M570 24V33M600 15V33"/></svg><span class="scale-center"></span><span class="scale-needle"></span></div></div>
+          </div>
+          <div class="hero-art hero-sequence">
+            <img class="hero-poster" src="assets/hero-sequence/poster.webp?v=4" width="1440" height="810" alt="" fetchpriority="high" decoding="async">
+            <canvas class="hero-canvas" width="960" height="540" hidden></canvas>
+          </div>
         </div>
         <div class="hero-actions" role="group" aria-label="Disponibilidade nas lojas">
           <button class="store-button" type="button" disabled aria-label="Google Play — em breve">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3.5 20 12 5 20.5Z"/><path d="m5 3.5 10 13M5 20.5 15 7"/></svg>
+            <svg class="store-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 3 8.2 9L4 21V3Zm1.7-.6 10.5 6-3.2 3.1L5.7 2.4Zm7.3 10.1 3.2 3.1-10.5 6 7.3-9.1Zm1-.5 3.1-3 3.6 2.1c.7.4.7 1.4 0 1.8L17.1 15 14 12Z"/></svg>
             <span><small>Em breve</small><strong>Google Play</strong></span>
           </button>
           <button class="store-button" type="button" disabled aria-label="App Store — em breve">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 4 9 16M15 4 6 20M4 15h16"/></svg>
+            <svg class="store-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15.8 5.7c.7-.9 1.2-2 1.1-3.2-1.1.1-2.4.8-3.1 1.6-.6.7-1.2 1.9-1 3 1.2.1 2.3-.6 3-1.4ZM18.5 12.4c0-1.8 1.5-2.8 1.6-2.9-1-1.5-2.6-1.7-3.1-1.7-1.3-.1-2.5.8-3.1.8-.7 0-1.7-.8-2.8-.7-1.4 0-2.8.8-3.5 2-1.5 2.6-.4 6.5 1 8.6.7 1 1.5 2 2.5 2 1 0 1.4-.6 2.8-.6 1.3 0 1.7.6 2.8.6s1.8-1 2.5-2c.8-1.1 1.1-2.2 1.2-2.3-.1 0-1.9-.7-1.9-2.8Z"/></svg>
             <span><small>Em breve</small><strong>App Store</strong></span>
           </button>
         </div>
-        <p class="scroll-hint" aria-hidden="true">Role para encontrar seu zero <span>↓</span></p>
       </div>
     </section>
     <section class="how-section" id="como" aria-labelledby="how-title">
