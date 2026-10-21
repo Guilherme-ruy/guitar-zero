@@ -7,7 +7,7 @@
   <meta name="description" content="Afine sua guitarra ou violão. Guitar Zero: seis cordas, zero distrações. Offline, sem anúncios e sem envio de áudio.">
   <title>Guitar Zero — Afine no zero.</title>
   <link rel="icon" href="assets/icon-96.png" type="image/png">
-  <link rel="stylesheet" href="styles.css?v=11">
+  <link rel="stylesheet" href="styles.css?v=13">
   <script src="vendor/gsap.min.js" defer></script>
   <script src="vendor/ScrollTrigger.min.js" defer></script>
   <script src="motion.js?v=8" defer></script>
@@ -15,12 +15,15 @@
 </head>
 <body>
   <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
-  <header class="header wrap">
-    <a class="brand" href="index.html" aria-label="Guitar Zero, início">
-      <svg class="brand-symbol" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="15"/><path d="M20 1v8M20 31v8"/><circle class="brand-center" cx="20" cy="20" r="3"/></svg>
+  <header class="header header-home header-social wrap">
+    <a class="brand brand-product" href="index.html" aria-label="Guitar Zero, início">
+      <img class="brand-guitarist" src="assets/guitarist-mark-v2.png" width="40" height="40" alt="" aria-hidden="true">
       <span class="wordmark">guitar <span>zero</span></span>
     </a>
-    <nav aria-label="Navegação principal"><a href="#como">O app</a><a href="privacidade.html">Privacidade</a></nav>
+    <nav class="social-links" aria-label="Projeto e criador">
+      <a href="https://github.com/Guilherme-ruy/guitar-zero" target="_blank" rel="noopener noreferrer" aria-label="GitHub do Guitar Zero, abre em nova aba"><svg class="social-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1a11 11 0 0 0-3.48 21.44c.55.1.75-.24.75-.53v-2.05c-3.06.67-3.71-1.3-3.71-1.3-.5-1.27-1.22-1.6-1.22-1.6-1-.68.08-.67.08-.67 1.1.08 1.68 1.13 1.68 1.13.98 1.68 2.57 1.2 3.2.92.1-.71.38-1.2.7-1.47-2.44-.28-5.01-1.22-5.01-5.44 0-1.2.43-2.18 1.13-2.95-.11-.28-.49-1.4.11-2.91 0 0 .92-.3 3.03 1.13a10.6 10.6 0 0 1 5.5 0c2.1-1.43 3.02-1.13 3.02-1.13.6 1.51.22 2.63.11 2.91.7.77 1.13 1.75 1.13 2.95 0 4.23-2.57 5.16-5.02 5.43.4.35.75 1.02.75 2.06v3c0 .3.2.64.76.53A11 11 0 0 0 12 1Z"/></svg>GitHub <span aria-hidden="true">↗</span></a>
+      <a href="https://www.linkedin.com/in/guiruy/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn de Guilherme Ruy, abre em nova aba"><svg class="social-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 2H4a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2ZM8 19H5V9h3ZM6.5 7.7A1.7 1.7 0 1 1 6.5 4.3a1.7 1.7 0 0 1 0 3.4ZM19 19h-3v-5.2c0-1.2-.4-1.9-1.4-1.9s-1.6.8-1.6 1.9V19h-3V9h2.9v1.4A3.2 3.2 0 0 1 15.7 9c2.1 0 3.3 1.3 3.3 3.8Z"/></svg>LinkedIn <span aria-hidden="true">↗</span></a>
+    </nav>
   </header>
   <main id="conteudo">
     <section class="hero" aria-labelledby="hero-title">
@@ -92,14 +95,31 @@
         </div>
       </div>
     </section>
-    <section class="privacy-section wrap" aria-labelledby="privacy-title">
-      <h2 id="privacy-title">Seu som.<br>Só seu<span class="mint-dot">.</span></h2>
-      <div class="privacy-copy"><p>O áudio fica no aparelho.<br>Sem gravação. Sem envio. Sem conta.</p><div class="privacy-facts"><span>Offline</span><span>Sem anúncios</span></div><a class="text-link" href="privacidade.html">Privacidade, sem mistério <span aria-hidden="true">↗</span></a></div>
+    <section class="privacy-section" aria-labelledby="privacy-title">
+      <div class="privacy-layout wrap">
+        <div class="privacy-copy">
+          <h2 id="privacy-title"><span>Sem cadastro.</span><em>Sem complicação.</em></h2>
+          <p class="project-license">Código open source sob a licença MIT.</p>
+          <a class="text-link" href="https://github.com/Guilherme-ruy/guitar-zero" target="_blank" rel="noopener noreferrer" aria-label="Veja o projeto no GitHub, abre em nova aba">Veja o projeto no GitHub <span aria-hidden="true">↗</span></a>
+        </div>
+        <ul class="trust-points">
+          <li><span class="trust-check" aria-hidden="true">✓</span><div><h3>Não grava o que você toca.</h3><p>O microfone serve só para afinar. Seu áudio não é salvo nem enviado.</p></div></li>
+          <li><span class="trust-check" aria-hidden="true">✓</span><div><h3>Afine sem internet.</h3><p>Não precisa de Wi-Fi nem de dados móveis.</p></div></li>
+          <li><span class="trust-check" aria-hidden="true">✓</span><div><h3>Sem pedir seus dados.</h3><p>Não precisa de login, e-mail ou outras informações pessoais.</p></div></li>
+        </ul>
+      </div>
     </section>
   </main>
   <footer class="footer wrap">
-    <a class="brand" href="index.html" aria-label="Guitar Zero, início"><svg class="brand-symbol" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="15"/><path d="M20 1v8M20 31v8"/><circle class="brand-center" cx="20" cy="20" r="3"/></svg><span class="wordmark">guitar <span>zero</span></span></a>
-    <div><a href="mailto:oruycontato@gmail.com">Contato ↗</a><a href="privacidade.html">Privacidade</a><span>© 2026 Guitar Zero</span></div>
+    <a class="brand brand-product" href="index.html" aria-label="Guitar Zero, início"><img class="brand-guitarist" src="assets/guitarist-mark-v2.png" width="32" height="32" alt="" aria-hidden="true"><span class="wordmark">guitar <span>zero</span></span></a>
+    <div>
+      <a href="privacidade.html" target="_blank" rel="noopener noreferrer" aria-label="Política de privacidade, abre em nova aba">Privacidade <span aria-hidden="true">↗</span></a>
+      <nav class="footer-social" aria-label="Projeto e contato">
+        <a class="social-icon-link" href="https://github.com/Guilherme-ruy/guitar-zero" target="_blank" rel="noopener noreferrer" aria-label="GitHub do Guitar Zero, abre em nova aba" title="GitHub"><svg class="social-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1a11 11 0 0 0-3.48 21.44c.55.1.75-.24.75-.53v-2.05c-3.06.67-3.71-1.3-3.71-1.3-.5-1.27-1.22-1.6-1.22-1.6-1-.68.08-.67.08-.67 1.1.08 1.68 1.13 1.68 1.13.98 1.68 2.57 1.2 3.2.92.1-.71.38-1.2.7-1.47-2.44-.28-5.01-1.22-5.01-5.44 0-1.2.43-2.18 1.13-2.95-.11-.28-.49-1.4.11-2.91 0 0 .92-.3 3.03 1.13a10.6 10.6 0 0 1 5.5 0c2.1-1.43 3.02-1.13 3.02-1.13.6 1.51.22 2.63.11 2.91.7.77 1.13 1.75 1.13 2.95 0 4.23-2.57 5.16-5.02 5.43.4.35.75 1.02.75 2.06v3c0 .3.2.64.76.53A11 11 0 0 0 12 1Z"/></svg></a>
+        <a class="social-icon-link" href="https://www.linkedin.com/in/guiruy/" target="_blank" rel="noopener noreferrer" aria-label="Contato com Guilherme Ruy no LinkedIn, abre em nova aba" title="LinkedIn"><svg class="social-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 2H4a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2ZM8 19H5V9h3ZM6.5 7.7A1.7 1.7 0 1 1 6.5 4.3a1.7 1.7 0 0 1 0 3.4ZM19 19h-3v-5.2c0-1.2-.4-1.9-1.4-1.9s-1.6.8-1.6 1.9V19h-3V9h2.9v1.4A3.2 3.2 0 0 1 15.7 9c2.1 0 3.3 1.3 3.3 3.8Z"/></svg></a>
+      </nav>
+      <span>© 2026 Guitar Zero</span>
+    </div>
   </footer>
 </body>
 </html>
