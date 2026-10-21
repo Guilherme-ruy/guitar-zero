@@ -178,8 +178,9 @@ código, asset ou elemento visual dele é utilizado.
 
 ## Site em desenvolvimento
 
-O site está sendo preparado no [PR #2](https://github.com/Guilherme-ruy/guitar-zero/pull/2).
-Ele ainda não está concluído: a sequência atual é provisória e aguarda um
-novo vídeo gerado no Gemini, revisão da anatomia e aprovação antes de trocar
-os frames. Os arquivos locais de vídeo, prompt e referências não fazem parte
-dos assets aprovados. A integração do código não equivale a publicar o site.
+O site estático fica em [site/](site/README.md). A animação da cabeça da
+guitarra usa o vídeo gerado no Google Flow, revisado e aprovado para integração
+em 20 de outubro de 2026, convertido em frames WebP para acompanhar a rolagem.
+Os MP4 de origem, prompts e referências permanecem locais; não entram no site
+nem no app. O site continua em desenvolvimento e não publicado, com os botões
+das lojas em “Em breve”. A integração do código não equivale a publicar o site.
