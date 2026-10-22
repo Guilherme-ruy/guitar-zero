@@ -1,186 +1,168 @@
-# Guitar Zero
+<div align="center">
+  <img src="assets/branding/guitar_zero_play_store_512.png" alt="Ícone do Guitar Zero" width="104" height="104">
+  <h1>Guitar Zero</h1>
+  <p><strong>Afine no zero.</strong></p>
+  <p>Afinador para guitarra e violão de seis cordas.<br>Rápido, offline e sem anúncios.</p>
+  <a href="https://github.com/Guilherme-ruy/guitar-zero/actions/workflows/ci.yml"><img src="https://github.com/Guilherme-ruy/guitar-zero/actions/workflows/ci.yml/badge.svg?branch=main" alt="Status do CI"></a>
+  <p>Flutter · Android testado · iOS ainda não testado · Código MIT</p>
+  <p><a href="#sobre">Sobre</a> · <a href="#recursos">Recursos</a> · <a href="#como-executar">Como executar</a> · <a href="#documentação">Documentação</a></p>
+</div>
 
-Afinador para **guitarra e violão de 6 cordas**: simples, rápido, bonito e
-100% offline.
+## Sobre
 
-Quanto mais perto da nota certa, mais o indicador converge para o **zero**.
+O **Guitar Zero** é um projeto pessoal com uma proposta simples: abrir o app,
+afinar o instrumento e voltar a tocar.
 
-## Objetivo
+A inspiração vem da praticidade de afinadores como o **GuitarTuna**. O Guitar Zero
+é um projeto independente, com implementação e identidade próprias, focado em
+uma experiência direta, sem cadastro e sem anúncios. Conforme a corda se
+aproxima da nota correta, o indicador chega ao **zero**.
 
-A primeira versão é só um afinador, muito bem feito:
+O app atende guitarras e violões de seis cordas em **afinação padrão**,
+da mais grave para a mais aguda: **E · A · D · G · B · E**.
 
-- afinação Standard: E2 82.41 · A2 110.00 · D3 146.83 · G3 196.00 ·
-  B3 246.94 · E4 329.63 Hz;
-- identificação automática da corda (**AUTO**) ou escolha manual tocando na
-  corda; só o switch volta ao automático;
-- headstock de **violão** (3+3) ou **guitarra** (6 em linha) em imagem
-  própria, ou visual **minimalista**; só os botões das notas indicam a corda;
-- nomes das notas em letras (E A D), solfejo (Mi Lá Ré) ou ambos;
-- medidor de abaixo/acima e feedback visual quando afinada (o número em
-  cents fica só no painel de diagnóstico);
-- instrução que não pisca: o último resultado fica na tela por 5 s depois
-  que o som acaba, e então diz o próximo passo;
-- tela acesa enquanto o app Android está visível, permitindo afinar sem
-  tocar no celular para evitar o bloqueio automático;
-- fundo em grafite com luz ambiente e ondas lentas; o movimento pausa em
-  segundo plano e respeita a redução de animações do sistema.
+## Recursos
 
-Fora de escopo nesta versão: login, backend, banco de dados, analytics,
-anúncios, metrônomo, acordes, afinações alternativas, recursos sociais.
-
-## Privacidade
-
-- O microfone é usado **apenas** para detectar a frequência das cordas.
-- Todo o processamento acontece no aparelho, em memória.
-- Nenhum áudio é gravado, armazenado ou enviado para a internet.
-- O build Android de release não declara a permissão `INTERNET`.
-- O microfone é liberado quando o app vai para segundo plano.
-
-## Stack
-
-- Flutter 3.47.5 (stable) · Dart 3.13
-- Plataforma inicial: Android. iOS preparado (pasta `ios/` e
-  `NSMicrophoneUsageDescription`), ainda não validado.
-- Dependências de runtime (BSD-3-Clause), isoladas em `lib/platform/`:
-  [`record`](https://pub.dev/packages/record) para ler o microfone e
-  [`shared_preferences`](https://pub.dev/packages/shared_preferences) para
-  guardar as preferências visuais no aparelho. Estado com `ChangeNotifier`
-  nativo.
-
-## Arquitetura
-
-```
-UI → TunerController → TunerEngine → AudioInput → PitchDetector → PitchFilter → StringMatcher
-```
-
-- `lib/core/music/` — notas, cents, afinações, corda mais provável (Dart puro)
-- `lib/core/audio/` — contrato de captura do microfone
-- `lib/core/dsp/` — contratos de detecção de pitch e filtros
-- `lib/core/tuner/` — engine que orquestra o pipeline
-- `lib/features/tuner/` — controller e widgets da tela
-- `lib/main.dart` — composition root
-
-Detalhes em [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
-
-## Como o processamento vai funcionar
-
-Captura PCM mono → remoção de DC + RMS gate → **YIN** → **análise harmônica
-(FFT: correção de oitava, refinamento, harmonicidade)** → gate de confiança →
-faixa → proteção temporal de oitava → stability gate → **One Euro** em cents →
-corda com histerese → afinado com histerese → hold de silêncio → UI.
-
-Estratégia, fases e resultados medidos em
-[docs/DSP_STRATEGY.md](docs/DSP_STRATEGY.md).
-
-Ferramentas (fora do CI):
-
-```bash
-dart run tool/yin_report.dart      # caracterização com sinais sintéticos
-dart run tool/dsp_benchmark.dart   # custo por frame (YIN, espectral, total)
-dart run tool/spectral_report.dart # oitava, refinamento, harmonicidade
-dart run tool/real_audio_eval.dart <dir_wav_44k> <selected.json>  # áudio real (NSynth)
-dart run tool/real_scenarios.dart  # troca de corda com sobreposição, ruído
-dart run tool/temporal_report.dart # pipeline temporal: janela 3 vs 5, beta
-```
-
-## Situação atual
-
-| Item | Estado |
+| Recurso | Como funciona |
 | --- | --- |
-| Estrutura do projeto, lint, CI | ✅ |
-| Teoria musical (notas, cents, Standard, corda mais próxima) | ✅ implementado e testado |
-| Contratos `AudioInput`, `PitchDetector`, `PitchFilter`, `TunerEngine` | ✅ |
-| `PitchTunerEngine` (orquestração do pipeline) | ✅ testado com fakes |
-| Tela do afinador | ✅ microfone real; AUTO/manual; violão, guitarra ou minimalista; letras/solfejo; ajustes salvos; painel de diagnóstico oculto |
-| Captura de microfone (`record`, PCM16, sem AGC/NS/AEC) + DSP em isolate | ✅ implementado e testado com fakes; ⚠️ **não validado em aparelho** |
-| Detector YIN em Dart puro (`YinPitchDetector`) | ✅ testado com sinais sintéticos |
-| Pipeline temporal (gates, octave guard, stability gate, One Euro, histereses, hold) | ✅ testado com sequências sintéticas |
-| Análise espectral (FFT própria, correção de oitava, refinamento, harmonicidade) | ✅ testada com sinais sintéticos |
-| Build Android (APK release) no CI | ✅ |
-| Avaliação com 214 notas reais (NSynth) + 6 em teste de regressão no CI | ✅ 0 notas exibindo corda/oitava errada |
-| Troca de corda com a anterior soando, ruído (gravações reais misturadas) | ✅ testado; ⚠️ duas cordas em volume parecido ainda atrasam a troca |
-| Execução em aparelho Android / iOS | ⏳ não validado |
-| Site de apresentação (PR #2) | ⏳ em desenvolvimento; vídeo final pendente de geração e aprovação; sem publicação |
+| Automático ou manual | Detecta a corda tocada ou permite escolher uma nota na tela. |
+| Visual do instrumento | Escolha entre violão, guitarra ou uma interface minimalista. |
+| Nomes das notas | Letras, solfejo ou os dois: **E**, **Mi** ou **E / Mi**. |
+| Afinação visual | Mostra se a nota está baixa, alta ou afinada. |
+| Preferências salvas | Mantém suas escolhas de exibição no aparelho. |
+| Tela acesa no Android | Permite afinar sem tocar na tela para evitar o bloqueio automático. |
+
+O fundo do app tem luz ambiente e movimento suave, com respeito à preferência
+de redução de animações do sistema.
+
+## Plataformas e disponibilidade
+
+| Plataforma | Situação |
+| --- | --- |
+| **Android** | **Testado em aparelho real.** Build e testes automatizados também disponíveis no CI. |
+| **iOS** | Estrutura inicial e permissão de microfone preparadas. **Ainda não testado.** |
+| Google Play e App Store | Publicação pendente. |
+| Site de apresentação | Implementado, com animação e prévia interativa. Ainda não publicado. |
+
+## Privacidade no app
+
+- O microfone serve apenas para identificar a frequência e a nota das cordas.
+- O áudio é processado no aparelho, em memória: não é gravado nem enviado.
+- O app funciona sem internet, login, anúncios ou Analytics.
+- O microfone é liberado quando o app vai para segundo plano.
+- O build Android de release não declara a permissão `INTERNET`.
+
+As preferências visuais ficam salvas localmente. A [política de privacidade](site/privacidade.html)
+detalha o funcionamento do app e as práticas do site.
 
 ## Como executar
 
-Pré-requisitos: Flutter 3.47.5 stable e Android SDK.
+Pré-requisitos: **Flutter 3.47.5 stable**, Android SDK e um aparelho ou emulador
+configurado. O app precisa de permissão de microfone para afinar ao vivo.
 
 ```bash
 flutter pub get
-flutter run                                     # microfone real
-flutter run --dart-define=GUITAR_ZERO_DEMO=true # leituras simuladas (selo DEMO)
-flutter analyze
-flutter test
+flutter run
 ```
 
-**Sem Flutter instalado**: pushes com mudanças fora de `site/` geram no GitHub Actions o artefato
-`guitar-zero-apk` (APK release, assinado com a chave de debug — só para
-teste). Baixe em *Actions → CI → execução → Artifacts* e instale no Android
-(permitindo "fontes desconhecidas").
+Para testar no Android sem instalar Flutter, baixe o artefato **`guitar-zero-apk`**
+em uma execução do [CI](https://github.com/Guilherme-ruy/guitar-zero/actions/workflows/ci.yml)
+que tenha concluído o build do app. Esse APK usa assinatura de depuração e é
+destinado a testes.
 
-## Teste em aparelho
+<details>
+<summary>Modo demo e verificações locais</summary>
 
-A captura ao vivo ainda não foi validada em celular. Roteiro curto:
+O modo demo usa leituras simuladas e exibe a identificação **DEMO** na tela.
 
-1. Instale o APK do artefato `guitar-zero-apk` e permita o microfone.
-2. Toque longo em **GUITAR ZERO** abre o painel de diagnóstico: tempo de
-   DSP por frame, frames descartados, frequência bruta, periodicidade,
-   harmonicidade e nível RMS.
-3. Toque cada corda solta algumas vezes (com e sem abafar) e gire a tarraxa
-   devagar e rápido.
-4. Observe: tempo até a nota aparecer, corda identificada, tremor do
-   ponteiro, se a leitura muda de corda/oitava no fim da nota, e o
-   comportamento com fala ou ruído por perto.
-5. Reporte com prints do painel (principalmente "DSP … ms" e
-   "descartados") e o modelo do aparelho.
+```bash
+flutter run --dart-define=GUITAR_ZERO_DEMO=true
+flutter analyze --fatal-infos
+flutter test
+dart format --output=none --set-exit-if-changed lib test tool
+```
 
-## CI
+Os testes do consentimento do site usam Node.js e não acessam o Google:
 
-Publicação na Play Store: o workflow manual **Play Store AAB** entrega o bundle
-assinado após configurar os secrets de upload. Guia em
-[docs/PLAY_STORE.md](docs/PLAY_STORE.md). O site estático (início e política de
-privacidade) está em [site/](site/README.md), sem build ou backend.
+```bash
+node --test site/tests/analytics.test.cjs
+```
 
-[`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda em todo push (qualquer
-branch) e em pull requests para a `main`:
+</details>
 
-Uma verificação leve compara os arquivos alterados. Quando todos estão em
-`site/`, os jobs de Flutter e APK são pulados; o site não está declarado nos
-assets do Flutter e não entra no APK/AAB. Alterações mistas, novas branches
-e execuções manuais continuam validando e compilando o app. Pull requests
-comparam o conjunto de alterações desde a base, incluindo mudanças do app
-feitas em commits anteriores do mesmo PR.
+## Por dentro do projeto
 
-1. `flutter pub get`
-2. `dart format --set-exit-if-changed`
-3. `flutter analyze --fatal-infos`
-4. `flutter test`
-5. `flutter build apk --release` + verificação de que o APK não declara
-   `INTERNET` + upload do APK como artefato.
+O app é feito em **Flutter e Dart**, com captura de áudio pelo pacote `record`
+e preferências locais com `shared_preferences`. O processamento de áudio roda
+em um isolate, separado da interface.
 
-## Open source
+A detecção combina **YIN**, análise harmônica por **FFT** e filtros temporais
+para estabilizar a leitura e reduzir trocas indevidas de corda e oitava.
 
-O código original do Guitar Zero e sua documentação geral estão sob a
-[licença MIT](LICENSE), com copyright de Guilherme Ruy. Ela permite estudar,
-modificar, distribuir e usar o código comercialmente, preservando os avisos
-de licença e copyright.
+```text
+Microfone → Detecção da nota → Estabilização → Identificação da corda → Interface
+```
 
-O nome e a identidade visual têm uma [política separada](TRADEMARKS.md).
-A MIT não concede, por si, direitos de marca. As artes e a documentação em
-`assets/branding/` e `assets/instruments/` conservam suas licenças CC0;
-os seis áudios de teste NSynth seguem CC BY 4.0. Dependências e recursos
-de terceiros mantêm suas próprias licenças. Detalhes e créditos em
-[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+O pipeline tem testes com sinais sintéticos e gravações reais do **NSynth**.
+Os resultados e as limitações estão na [estratégia de DSP](docs/DSP_STRATEGY.md).
+As ferramentas de avaliação ficam em [tool/](tool/).
 
-O GuitarTuna é usado apenas como referência de experiência de usuário; nenhum
-código, asset ou elemento visual dele é utilizado.
+<details>
+<summary>Organização do código e CI</summary>
 
-## Site em desenvolvimento
+```text
+lib/
+├── core/
+│   ├── audio/        Contratos de captura
+│   ├── dsp/          Detecção, análise espectral e filtros
+│   ├── music/        Notas, afinação e identificação da corda
+│   └── tuner/        Orquestração do processamento
+├── features/tuner/  Controller e interface do afinador
+├── platform/        Integrações com o aparelho
+└── main.dart        Montagem do aplicativo
+```
 
-O site estático fica em [site/](site/README.md). A animação da cabeça da
-guitarra usa o vídeo gerado no Google Flow, revisado e aprovado para integração
-em 20 de outubro de 2026, convertido em frames WebP para acompanhar a rolagem.
-Os MP4 de origem, prompts e referências permanecem locais; não entram no site
-nem no app. O site continua em desenvolvimento e não publicado, com os botões
-das lojas em “Em breve”. A integração do código não equivale a publicar o site.
+O [GitHub Actions](.github/workflows/ci.yml) verifica formatação, análise,
+testes e build Android quando há alterações do app. Mudanças apenas em `site/`
+pulam os jobs de Flutter e APK. O workflow manual de AAB prepara o bundle
+assinado para envio ao Play Console, conforme o [guia de publicação](docs/PLAY_STORE.md).
+
+</details>
+
+## Site
+
+O [site de apresentação](site/README.md) fica neste repositório e usa HTML, CSS e
+JavaScript, sem backend ou etapa de build. A guitarra acompanha a rolagem com
+uma sequência de imagens WebP do vídeo gerado no Google Flow, já aprovado
+e integrado. Há também uma prévia interativa dos visuais e modos do afinador.
+
+O Google Analytics foi integrado **somente ao site**, com consentimento opcional
+e possibilidade de mudar a escolha no rodapé. A coleta real será validada após
+a publicação. O app continua offline e sem Analytics.
+
+## Documentação
+
+- [Arquitetura e organização das camadas](docs/ARCHITECTURE.md)
+- [Processamento de áudio, avaliações e limitações](docs/DSP_STRATEGY.md)
+- [Preparação para publicar no Google Play](docs/PLAY_STORE.md)
+- [Site, mídias e integração do Analytics](site/README.md)
+- [Créditos e recursos de terceiros](THIRD_PARTY_NOTICES.md)
+
+## Feedback e contribuições
+
+Sugestões e relatos de problemas são bem-vindos nas
+[issues](https://github.com/Guilherme-ruy/guitar-zero/issues). Em testes com o
+app, informe o modelo do aparelho, a versão do Android, a corda tocada e o
+comportamento observado. Um toque longo em **GUITAR ZERO** abre o painel de
+diagnóstico para ajudar na investigação.
+
+## Licença e identidade
+
+O código original e a documentação geral seguem a [licença MIT](LICENSE).
+O nome e a identidade Guitar Zero têm uma [política própria](TRADEMARKS.md).
+As artes, os frames do vídeo, as dependências e os dados de teste mantêm os
+termos indicados nos [créditos e licenças de terceiros](THIRD_PARTY_NOTICES.md).
+
+---
+
+Desenvolvido por **Guilherme Ruy** · [LinkedIn](https://www.linkedin.com/in/guiruy/)
