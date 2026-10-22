@@ -75,8 +75,10 @@ Sem os quatro secrets, o workflow informa quais configurações estão faltando.
   SHA-256 fixado no workflow.
 - Assinatura JAR válida, certificado igual ao keystore de upload e sem
   identidade `Android Debug`.
-- Alinhamento LOAD/RELRO de 16 KB nas bibliotecas ELF64 e configuração de
-  ZIP alinhada a 16 KB quando as bibliotecas nativas são descomprimidas.
+- Alinhamento LOAD de 16 KB nas bibliotecas ELF64. RELRO precisa terminar
+  alinhado ou ocupar seu próprio LOAD sem sobrepor outros dados graváveis ao
+  arredondar a proteção para 16 KB. A configuração ZIP também deve solicitar
+  alinhamento de 16 KB quando as bibliotecas nativas são descomprimidas.
   Essas checagens não substituem teste em dispositivo/emulador de 16 KB nem
   a validação final do Play Console.
 

@@ -41,21 +41,39 @@ def verify_elf(data):
     entry_size, count = struct.unpack_from(order + 'HH', data, 54)
     if entry_size < 56 or not count:
         raise ValueError('Native program headers are invalid.')
-    loads = 0
+    loads = []
+    relros = []
     for index in range(count):
         start = offset + index * entry_size
         kind = struct.unpack_from(order + 'I', data, start)[0]
+        flags = struct.unpack_from(order + 'I', data, start + 4)[0]
         address = struct.unpack_from(order + 'Q', data, start + 16)[0]
         memory_size = struct.unpack_from(order + 'Q', data, start + 40)[0]
         alignment = struct.unpack_from(order + 'Q', data, start + 48)[0]
         if kind == 1:
-            loads += 1
+            loads.append((address, address + memory_size, flags))
             if alignment < 16384 or alignment & (alignment - 1):
                 raise ValueError('A native LOAD segment does not support 16 KB alignment.')
-        if kind == 0x6474E552 and (address + memory_size) % 16384:
-            raise ValueError('A native RELRO segment is not 16 KB aligned.')
+        if kind == 0x6474E552:
+            relros.append((address, address + memory_size))
     if not loads:
         raise ValueError('Native LOAD segments are missing.')
+    for address, end in relros:
+        if end % 16384 == 0:
+            continue
+        # Android permits an unaligned end when RELRO owns its entire LOAD.
+        # Rounding protection to 16 KB must not cover another writable LOAD.
+        # RELRO may include trailing padding beyond the LOAD's memory size.
+        isolated = any(start == address and address < stop <= end for start, stop, _ in loads)
+        page_start = address // 16384 * 16384
+        page_end = (end + 16383) // 16384 * 16384
+        overlaps_writable = any(
+            flags & 2 and stop > start and start < page_end and stop > page_start
+            and not (address <= start and stop <= end)
+            for start, stop, flags in loads
+        )
+        if not isolated or overlaps_writable:
+            raise ValueError('A native RELRO segment is not safe on 16 KB pages.')
 
 def command(arguments):
     result = subprocess.run(arguments, capture_output=True, text=True, check=False)
@@ -99,7 +117,10 @@ def verify_bundle(bundle, manifest, config):
     with zipfile.ZipFile(bundle) as archive:
         for name in archive.namelist():
             if name.endswith('.so') and any('/lib/' + abi + '/' in name for abi in ('arm64-v8a', 'x86_64')):
-                verify_elf(archive.read(name))
+                try:
+                    verify_elf(archive.read(name))
+                except ValueError as error:
+                    raise ValueError(f'{name}: {error}') from error
                 count += 1
     fingerprint = verify_signing(bundle)
     print(f'Validated package, API, permissions, upload certificate and {count} ELF64 libraries.')

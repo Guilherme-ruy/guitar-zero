@@ -9,7 +9,7 @@ import unittest
 from unittest.mock import patch
 import zipfile
 from scripts.prepare_android_signing import restore_keystore, validate_version
-from scripts.verify_play_bundle import verify_elf, verify_manifest, verify_signing
+from scripts.verify_play_bundle import verify_bundle, verify_elf, verify_manifest, verify_signing
 
 MANIFEST = '''<manifest xmlns:android="http://schemas.android.com/apk/res/android"
 package="io.github.guilhermeruy.guitar_zero" android:versionCode="3">
@@ -17,17 +17,29 @@ package="io.github.guilhermeruy.guitar_zero" android:versionCode="3">
 <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 <application android:debuggable="false"/></manifest>'''
 
-def elf(alignment=16384, relro_end=None):
-    count = 1 if relro_end is None else 2
+def elf(alignment=16384, relro_end=None, *, load_address=0, load_size=65536,
+        relro_address=0, extra_loads=()):
+    count = (1 if relro_end is None else 2) + len(extra_loads)
     data = bytearray(64 + 56 * count)
     data[:6] = b'\x7fELF\x02\x01'
     struct.pack_into('<Q', data, 32, 64)
     struct.pack_into('<HH', data, 54, 56, count)
     struct.pack_into('<I', data, 64, 1)
+    struct.pack_into('<I', data, 68, 6)
+    struct.pack_into('<Q', data, 80, load_address)
+    struct.pack_into('<Q', data, 104, load_size)
     struct.pack_into('<Q', data, 112, alignment)
     if relro_end is not None:
         struct.pack_into('<I', data, 120, 0x6474E552)
-        struct.pack_into('<Q', data, 160, relro_end)
+        struct.pack_into('<Q', data, 136, relro_address)
+        struct.pack_into('<Q', data, 160, relro_end - relro_address)
+    first_extra = 1 if relro_end is None else 2
+    for index, (address, size, flags) in enumerate(extra_loads, first_extra):
+        start = 64 + 56 * index
+        struct.pack_into('<II', data, start, 1, flags)
+        struct.pack_into('<Q', data, start + 16, address)
+        struct.pack_into('<Q', data, start + 40, size)
+        struct.pack_into('<Q', data, start + 48, alignment)
     return data
 
 class SigningPreparationTests(unittest.TestCase):
@@ -92,6 +104,50 @@ class BundlePolicyTests(unittest.TestCase):
             verify_elf(elf(4096))
         with self.assertRaisesRegex(ValueError, 'RELRO'):
             verify_elf(elf(16384, 4096))
+
+    def test_android_documented_isolated_relro_is_accepted(self):
+        # Official Android example: RELRO and its LOAD both span 0x4680..0x5000.
+        verify_elf(elf(relro_end=0x5000, relro_address=0x4680,
+                       load_address=0x4680, load_size=0x980,
+                       extra_loads=((0, 0x680, 5), (0x8000, 0x1000, 6))))
+
+    def test_relro_with_following_writable_data_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, 'RELRO'):
+            verify_elf(elf(relro_end=0xE1000, relro_address=0xDFAF0,
+                           load_address=0xDFAF0, load_size=0x4510))
+
+    def test_real_datastore_relro_padding_is_accepted(self):
+        # Headers from the arm64 and x86_64 libraries in this project's CI APK.
+        verify_elf(elf(relro_end=0x6000, relro_address=0x51C0,
+                       load_address=0x51C0, load_size=0x268,
+                       extra_loads=((0, 0x11C0, 5), (0x9428, 1, 6))))
+        verify_elf(elf(relro_end=0x6000, relro_address=0x4F20,
+                       load_address=0x4F20, load_size=0x228,
+                       extra_loads=((0, 0xF20, 5),)))
+
+    def test_isolated_relro_must_not_protect_another_writable_load(self):
+        for address in (0x4000, 0x6000):
+            with self.subTest(address=address), self.assertRaisesRegex(ValueError, 'RELRO'):
+                verify_elf(elf(relro_end=0x5000, relro_address=0x4680,
+                               load_address=0x4680, load_size=0x980,
+                               extra_loads=((address, 0x100, 6),)))
+
+    def test_bundle_failure_identifies_the_native_library(self):
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            bundle = base / 'test.aab'
+            manifest = base / 'manifest.xml'
+            config = base / 'config.json'
+            manifest.write_text(MANIFEST, encoding='utf-8')
+            config.write_text('{}', encoding='utf-8')
+            library = 'base/lib/arm64-v8a/bad.so'
+            with zipfile.ZipFile(bundle, 'w') as archive:
+                archive.writestr(library, elf(4096))
+            with patch.dict(os.environ, {'BUILD_NUMBER': '3'}):
+                with self.assertRaises(ValueError) as raised:
+                    verify_bundle(bundle, manifest, config)
+            self.assertIn(library + ':', str(raised.exception))
+            self.assertIn('LOAD', str(raised.exception))
 
 @unittest.skipUnless(shutil.which('keytool') and shutil.which('jarsigner'), 'JDK signing tools required')
 class CertificateIntegrationTests(unittest.TestCase):
