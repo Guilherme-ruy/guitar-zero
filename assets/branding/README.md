@@ -1,53 +1,62 @@
-# Guitar Zero — logo aprovada
+# Guitar Zero — ícone menta
 
-Vista traseira de cabeça de guitarra com seis tarraxas, madeira clara, prata
-fosca e assinatura manuscrita Guitar Zero. Composição e arte aprovadas pelo
-proprietário em 2026-10-02.
+Vista traseira da cabeça de guitarra, com seis tarraxas em linha, madeira
+clara, prata e assinatura Guitar Zero. A versão com fundo menta e luz creme
+foi aprovada pelo proprietário em 22/10/2026 e usada na ficha da Play Store.
 
 | Arquivo | Uso | Especificação |
 | --- | --- | --- |
-| guitar_zero_play_store_512.png | Ícone da ficha no Google Play Console | 512×512, PNG RGBA 32 bits, sRGB, alpha 255 |
-| guitar_zero_ios_1024.png | Fonte para AppIcon no catálogo de assets do Xcode | 1024×1024, PNG RGB, sRGB, sem alpha |
+| `guitar_zero_play_store_512.png` | Play Store e README | 512 × 512, PNG RGBA, arquivo aprovado na loja |
+| `guitar_zero_ios_1024.png` | Fonte dos ícones nativos Android e iOS | 1024 × 1024, PNG RGB, sem transparência |
 
-Quadrados completos, sem cantos arredondados incorporados. O fundo escuro e
-a composição diagonal da arte aprovada foram preservados, incluindo o braço
-saindo pela borda inferior direita. As máscaras das plataformas recortam essa
-extremidade; as seis tarraxas e a assinatura ficam no interior. A assinatura
-é decorativa e não permanece legível nos menores tamanhos de ícone.
+A imagem de 512 px é a mesma enviada à Play Store. A de 1024 px foi
+exportada do mestre aprovado de 1254 px. Ambas mantêm a composição diagonal,
+as seis tarraxas e o braço saindo pela borda inferior direita. Não há cordas
+sobre o verso da cabeça. Os arquivos são quadrados, sem máscara incorporada.
+A assinatura é decorativa e perde legibilidade nos menores tamanhos.
 
-O PNG de 512 é o ícone **da loja**, não configura o launcher do APK.
-Use o PNG de 1024 como fonte para gerar os mipmaps Android na integração.
-Para ícones adaptativos, preparar foreground/background e validar as máscaras
-é uma etapa separada. Não há camadas transparentes ou arquivo Icon Composer
-neste pacote.
+## Integração no aplicativo
 
-No iOS, importe o PNG de 1024 para AppIcon usando o catálogo do Xcode;
-o ícone acompanha a build enviada ao App Store Connect. Nenhum catálogo,
-Dart, pubspec, recurso nativo ou workflow foi alterado por este pacote.
-Não declare estes arquivos como assets Flutter de runtime: isso evita
-incluí-los no APK sem necessidade. Flutter não foi executado aqui.
+- **Android:** `android/app/src/main/res/mipmap-*` contém os ícones tradicionais
+  de 48, 72, 96, 144 e 192 px. Os adaptativos têm camadas de 108 dp nas cinco
+  densidades: a arte ocupa os 72 dp centrais e os pixels das bordas são
+  prolongados nos 18 dp externos para os efeitos do launcher. O fundo de
+  segurança é menta (`#BCE9BE`), configurado em `ic_launcher_background.xml`.
+  O manifesto já referencia `@mipmap/ic_launcher`.
+- **iOS:** os 15 PNGs de `ios/Runner/Assets.xcassets/AppIcon.appiconset/`
+  foram exportados nos tamanhos declarados pelo catálogo existente, em RGB
+  sem transparência. **O app iOS ainda não foi testado.**
 
-Referências oficiais:
-[Google Play](https://developer.android.com/distribute/google-play/resources/icon-design-specifications) e
-[Xcode](https://developer.apple.com/documentation/xcode/configuring-your-app-icon).
+Os recortes circular e arredondado do Android foram conferidos visualmente.
+A extremidade do braço pode ser recortada pela máscara do aparelho; as seis
+tarraxas e a assinatura permanecem visíveis na prévia estática.
+O sistema pode alterar cores quando o usuário habilita ícones temáticos.
+A instalação de uma nova versão do app é necessária para atualizar seu ícone;
+alterar apenas a ficha da loja não muda o aplicativo instalado.
+
+Estes arquivos não são assets Flutter de runtime. Os recursos nativos são
+incluídos pelos respectivos builds, sem declaração adicional no `pubspec.yaml`.
+
+Referências oficiais: [Android adaptativo](https://developer.android.com/develop/ui/compose/system/icon_design_adaptive),
+[Google Play](https://developer.android.com/distribute/google-play/resources/icon-design-specifications)
+e [Xcode](https://developer.apple.com/documentation/xcode/configuring-your-app-icon).
 
 ## Origem e licença
 
-Gerado com ImageGen integrada, inicialmente usando a foto de vista traseira
-fornecida pelo proprietário como referência de anatomia/composição, e um
-conceito anterior como referência de estilo. A edição final substituiu
-menta/teal por madeira clara/prata e acrescentou a assinatura. A foto e os
-conceitos descartados não são distribuídos. Prompt final em
-generation-prompts.md. Pillow foi usado apenas para redimensionar, converter
-e exportar os PNGs; não houve retoque nem alteração da composição aprovada.
-O mestre aprovado é entregue separadamente no ZIP, fora dos assets do repo.
+Arte gerada com ImageGen integrada, originalmente a partir da foto de vista
+traseira fornecida pelo proprietário e de um conceito anterior como referência
+de estilo. A edição menta substitui o fundo preto, preservando a vista traseira,
+as seis tarraxas e a assinatura. Prompts em [generation-prompts.md](generation-prompts.md).
+A foto e os conceitos descartados não são distribuídos. O mestre de 1254 px
+permanece nos arquivos locais de preparação da loja, fora do repositório.
 
-CC0-1.0 para a ilustração e documentação, permitindo uso comercial,
-modificação e redistribuição; veja LICENSE.txt. A dedicação não concede
-direitos de marca. Direitos sobre a saída seguem os
+Pillow foi usado para redimensionar, converter, exportar e preparar a margem
+externa do ícone adaptativo. A guitarra não foi redesenhada nesse processo.
+
+A ilustração e esta documentação mantêm a dedicação **CC0-1.0**, permitindo
+uso comercial, modificação e redistribuição; veja [LICENSE.txt](LICENSE.txt).
+Ela não concede direitos de marca. A [política de identidade](../../TRADEMARKS.md)
+trata do uso do nome e da logo para identificar a origem de um produto e não
+revoga as permissões CC0. Direitos sobre a saída seguem os
 [termos da OpenAI](https://openai.com/policies/row-terms-of-use/), na extensão
 permitida por lei. Não há garantia de exclusividade.
-
-O uso do nome e da logo para identificar a origem de um produto é tratado
-separadamente em [TRADEMARKS.md](../../TRADEMARKS.md). Essa política não
-altera a CC0 da ilustração nem revoga permissões anteriormente concedidas.

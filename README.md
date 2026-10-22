@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/branding/guitar_zero_play_store_512.png" alt="Ícone do Guitar Zero" width="104" height="104">
+  <img src="assets/branding/guitar_zero_play_store_512.png" alt="Ícone do Guitar Zero com fundo menta" width="104" height="104">
   <h1>Guitar Zero</h1>
   <p><strong>Afine no zero.</strong></p>
   <p>Afinador para guitarra e violão de seis cordas.<br>Rápido, offline e sem anúncios.</p>
@@ -41,8 +41,9 @@ de redução de animações do sistema.
 | --- | --- |
 | **Android** | **Testado em aparelho real.** Build e testes automatizados também disponíveis no CI. |
 | **iOS** | Estrutura inicial e permissão de microfone preparadas. **Ainda não testado.** |
-| Google Play e App Store | Publicação pendente. |
-| Site de apresentação | Implementado, com animação e prévia interativa. Ainda não publicado. |
+| Google Play | Disponível em **teste fechado**, apenas para contas cadastradas como testadoras. |
+| App Store | Publicação pendente. |
+| Site de apresentação | Publicado em **[guitarzero.com.br](https://guitarzero.com.br)**, com animação e prévia interativa. |
 
 ## Privacidade no app
 
@@ -137,8 +138,7 @@ uma sequência de imagens WebP do vídeo gerado no Google Flow, já aprovado
 e integrado. Há também uma prévia interativa dos visuais e modos do afinador.
 
 O Google Analytics foi integrado **somente ao site**, com consentimento opcional
-e possibilidade de mudar a escolha no rodapé. A coleta real será validada após
-a publicação. O app continua offline e sem Analytics.
+e possibilidade de mudar a escolha no rodapé. O app continua offline e sem Analytics.
 
 ## Documentação
 

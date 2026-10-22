@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Cor do fundo da logo (assets/branding), para o recorte do ícone adaptativo. -->
-    <color name="ic_launcher_background">#090A0C</color>
+    <!-- Menta da identidade aprovada; a camada de arte contém o degradê completo. -->
+    <color name="ic_launcher_background">#BCE9BE</color>
 </resources>
