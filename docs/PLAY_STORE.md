@@ -5,8 +5,8 @@
 O CI comum continua entregando `guitar-zero-apk` para testes em aparelho.
 O workflow manual **Play Store AAB** gera um AAB de release assinado com sua
 chave de upload, para envio manual ao Play Console. Não publica automaticamente.
-Somente a `main` pode executar o job de assinatura. Antes do primeiro uso,
-mescle este PR para que o workflow apareça na aba Actions.
+Somente a `main` pode executar o job de assinatura. O workflow já está
+disponível na aba Actions.
 
 O pacote permanece `io.github.guilhermeruy.guitar_zero`. Confirmar esse nome
 antes do primeiro envio: depois, ele identifica permanentemente o app.
@@ -82,10 +82,15 @@ Sem os quatro secrets, o workflow informa quais configurações estão faltando.
 
 ## Ainda necessário antes de publicar
 
-- Cadastrar os quatro secrets. Nenhuma chave foi criada ou cadastrada nesta
-  preparação. O primeiro build AAB real depende deles.
-- Hospedar `site/` com HTTPS; revisar responsável/contato/logs da hospedagem.
-- Inserir acesso à política dentro do app. Política externa sozinha não basta.
+- Conferir os quatro secrets de assinatura e manter um backup privado da
+  chave de upload e de suas senhas. O primeiro build AAB real depende deles.
+- Site e política hospedados com HTTPS em `https://guitarzero.com.br` e
+  `https://guitarzero.com.br/privacidade.html`.
+- Conferir no aparelho o link **Política de privacidade**, no painel de ajustes.
+  Ele abre o navegador externo; o afinador não carrega conteúdo remoto nem
+  precisa de permissão `INTERNET` para isso. Ao sair para o navegador, a escuta
+  segue o tratamento existente de pausa/retomada do app. Se o sistema não
+  conseguir abrir o navegador, o usuário pode copiar o link.
 - Ficha da loja: descrições, ícone, screenshots reais, feature graphic,
   classificação indicativa, público-alvo e declarações de conteúdo.
 - Segurança dos dados: confirmar que a versão/SDKs enviados continuam sem

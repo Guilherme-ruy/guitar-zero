@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme.dart';
 import '../../preferences/tuner_preferences.dart';
+import 'privacy_policy_link.dart';
 
 /// Ajustes visuais em um painel inferior: instrumento, visual e nomes.
 Future<void> showTunerSettings(
@@ -49,6 +50,8 @@ Future<void> showTunerSettings(
               ],
               onChanged: (v) => preferences.noteNaming = v,
             ),
+            const Divider(height: 1),
+            const PrivacyPolicyLink(),
           ],
         ),
       ),
