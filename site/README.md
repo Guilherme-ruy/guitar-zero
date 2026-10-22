@@ -2,7 +2,8 @@
 
 O código fica em `site/`, no mesmo repositório do app. São duas páginas:
 `index.html` (três seções) e `privacidade.html`. HTML, CSS e JavaScript local,
-sem PHP, framework, build, fontes externas, cookies, analytics ou CDNs.
+sem PHP, framework, build, fontes externas ou CDNs para a interface. O Google
+Analytics é opcional e só carrega no domínio público após o consentimento.
 
 ## Estado do site
 
@@ -17,7 +18,7 @@ site nem libera os botões das lojas.
 1. Faça backup dos arquivos existentes na pasta do domínio.
 2. Extraia o ZIP do site e envie **seu conteúdo** para `public_html`, ou para a
    pasta pública vinculada ao domínio. `index.html`, `privacidade.html`,
-   `styles.css`, `motion.js`, `how.js`, `assets/` e `vendor/`
+   `styles.css`, `motion.js`, `how.js`, `analytics.js`, `analytics.css`, `assets/` e `vendor/`
    precisam ficar no mesmo nível.
 3. Mantenha HTTPS ativo. Acesse o site e teste o link de privacidade.
 
@@ -30,6 +31,42 @@ Não envie o repositório inteiro, arquivos do app, keystores ou secrets.
 A política pública termina em `/privacidade.html`, sem login. Antes de
 cadastrá-la no Play Console, confira o nome do responsável e as práticas
 de logs da hospedagem. O app também deve oferecer acesso à política.
+
+## Medição de acessos
+
+- Propriedade GA4: **Guitar Zero** (`560080828`), na conta existente
+  `Default Account for Firebase`. Fuso: São Paulo; moeda: real.
+- Fluxo Web: **Guitar Zero — Site** (`16177930743`), URL
+  `https://guitarzero.com.br`, ID de medição **`G-JND41JTZB8`**.
+  Esse identificador é público; não é uma senha ou chave de API.
+- `analytics.js` só carrega a tag em HTTPS e nos hosts exatos
+  `guitarzero.com.br` e `www.guitarzero.com.br`, após aceitar. A prévia local
+  mostra as escolhas para revisão visual, mas nunca envia acessos ao Google.
+- Consentimento básico: sem carregamento ou pings ao Google antes da escolha
+  ou após recusar. O botão **Cookies**, no rodapé das duas páginas, reabre as
+  opções. A escolha expira em 180 dias. A retirada do consentimento desativa
+  a tag, limpa os cookies GA acessíveis e recarrega a página; outras abas
+  abertas recebem a mudança pelo evento de armazenamento.
+- Medição otimizada desativada no fluxo. Sem eventos de formulários, cliques,
+  rolagem ou vídeos. Sem Google Signals/personalização publicitária no código.
+  URLs enviadas sem query/hash; referência de origem limitada ao domínio.
+  Cookies GA com até 180 dias e sem renovação a cada visita.
+- Retenção da propriedade: usuários e eventos em dois meses; redefinição por
+  nova atividade desativada. Isso não apaga os relatórios padrão agregados.
+  Google Signals e coleta de dados fornecidos pelo usuário permanecem desativados.
+- `privacidade.html` distingue a medição opcional do site do app, que continua
+  offline e sem analytics. Não adicionar Firebase/SDK Analytics ao Flutter.
+- Após publicar: conferir a tag no domínio HTTPS, aceitar no próprio
+  navegador e abrir **Relatórios → Tempo real** na propriedade Guitar Zero.
+  Recusar em outra sessão deve impedir qualquer requisição do Google Analytics.
+  Sem publicação, ainda não há coleta real validada. Bloqueadores e recusas
+  reduzem a contagem; ela não representa todas as visitas.
+- Não instalar uma segunda tag pelo painel da hospedagem ou outro plugin.
+  Isso duplicaria as visitas ou contornaria a escolha do visitante.
+- Verificação do controlador, sem acessar o Google:
+  `node --test site/tests/analytics.test.cjs` (somente desenvolvimento).
+- Referências: [consentimento básico](https://developers.google.com/tag-platform/security/concepts/consent-mode)
+  e [configuração GA4](https://developers.google.com/analytics/devguides/collection/ga4/reference/config).
 
 ## Hero e movimento
 
